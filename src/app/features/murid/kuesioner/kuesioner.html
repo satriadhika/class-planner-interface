@@ -1,0 +1,373 @@
+<div class="page">
+  <!-- ============ JUDUL ============ -->
+  <section class="hero-card">
+    <a class="back" routerLink="/murid">
+      <app-icon name="arrow-left" [size]="18" />
+      Kembali
+    </a>
+    <span class="tag">Kuesioner penjurusan</span>
+    <h1>Cita-cita &amp; pilihan jurusan</h1>
+    <p>Isi sesuai minatmu sendiri. Draf tersimpan otomatis setiap pindah langkah dan bisa dilanjutkan kapan saja.</p>
+    @if (data()?.closeAtLabel; as closeAt) {
+      <p class="deadline">
+        <app-icon name="clock" [size]="16" />
+        Kuesioner ditutup {{ closeAt }}
+      </p>
+    }
+  </section>
+
+  @if (loading()) {
+    <section class="card state-card">Memuat kuesioner...</section>
+  } @else if (loadError(); as error) {
+    <section class="card state-card">
+      <p class="error-text">{{ error }}</p>
+      <button type="button" class="btn btn-secondary" (click)="reload()">Coba lagi</button>
+    </section>
+  } @else {
+    @if (submitted()) {
+      <section class="submitted">
+        <app-icon name="badge-check" [size]="24" />
+        <div>
+          <strong>Kuesioner sudah dikirim</strong>
+          <p>
+            Dikirim {{ data()?.submittedAtLabel }}. Jawaban tidak bisa diubah lagi. Hubungi waka kurikulum kalau ada
+            yang perlu diperbaiki.
+          </p>
+        </div>
+      </section>
+    } @else if (readOnly()) {
+      <section class="submitted closed">
+        <app-icon name="lock" [size]="24" />
+        <div>
+          <strong>Periode kuesioner sedang ditutup</strong>
+          <p>Jawabanmu tidak bisa diubah sekarang. Hubungi waka kurikulum kalau kamu belum sempat mengirim.</p>
+        </div>
+      </section>
+    }
+
+    <!-- ============ STEPPER ============ -->
+    <nav class="stepper" aria-label="Langkah kuesioner">
+      <ol>
+        @for (s of steps; track s.n) {
+          <li [class.active]="step() === s.n" [class.done]="isDone(s.n)">
+            <button
+              type="button"
+              (click)="goTo(s.n)"
+              [disabled]="!canOpen(s.n)"
+              [attr.aria-current]="step() === s.n ? 'step' : null"
+            >
+              <span class="num">
+                @if (isDone(s.n)) {
+                  <app-icon name="check" [size]="18" />
+                } @else {
+                  {{ s.n }}
+                }
+              </span>
+              <span class="label">{{ s.label }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+    </nav>
+
+    <!-- ============ FORM ============ -->
+    <section class="card form-card">
+      <header class="section-head">
+        <span class="section-icon"><app-icon [name]="currentStep().icon" [size]="26" /></span>
+        <div>
+          <h2>{{ currentStep().title }}</h2>
+          <p>{{ currentStep().subtitle }}</p>
+        </div>
+      </header>
+
+      @switch (step()) {
+        @case (1) {
+          <!-- 1. DATA DIRI -->
+          <div class="grid">
+            <label class="field">
+              <span>Nama lengkap</span>
+              <input [value]="data()?.student?.fullName ?? ''" readonly />
+            </label>
+            <label class="field">
+              <span>NIS</span>
+              <input [value]="data()?.student?.studentNumber ?? ''" readonly />
+            </label>
+            <label class="field">
+              <span>Kelas saat ini</span>
+              <input [value]="data()?.student?.classLabel ?? '-'" readonly />
+            </label>
+          </div>
+
+          <div class="note">
+            <app-icon name="badge-check" [size]="26" />
+            <div>
+              <strong>Data tersinkron dengan e-Rapor</strong>
+              <p>Nama dan kelas mengikuti data sekolah. Kalau ada yang salah, hubungi wali kelas atau waka kurikulum.</p>
+            </div>
+          </div>
+        }
+
+        @case (2) {
+          <!-- 2. CITA-CITA -->
+          <form [formGroup]="aspirationForm" (ngSubmit)="next()" novalidate>
+            <div class="grid">
+              <label class="field full">
+                <span>Cita-cita</span>
+                <input
+                  formControlName="aspiration"
+                  placeholder="Contoh: Dokter anak, insinyur sipil, akuntan publik"
+                  maxlength="100"
+                  [attr.aria-invalid]="isInvalid(aspirationForm.controls.aspiration)"
+                />
+                @if (isInvalid(aspirationForm.controls.aspiration)) {
+                  <small class="field-error">Cita-cita wajib diisi</small>
+                }
+              </label>
+
+              <label class="field full">
+                <span>Penunjang cita-cita <em>(opsional)</em></span>
+                <textarea
+                  formControlName="supportingActivities"
+                  rows="5"
+                  maxlength="1000"
+                  placeholder="Kegiatan, prestasi, atau pengalaman yang mendukung cita-citamu. Contoh: juara olimpiade biologi tingkat kota, anggota PMR."
+                ></textarea>
+                <small class="hint">{{ supportingLength() }}/1000 karakter</small>
+              </label>
+            </div>
+          </form>
+
+          <div class="field full">
+            <span class="field-label">Dokumen penunjang jurusan <em>(opsional)</em></span>
+            <p class="hint">Sertifikat, piagam, atau bukti kegiatan. PDF, JPG, atau PNG, maksimal 5 MB per file, {{ maxAttachments }} file.</p>
+
+            @if (attachments().length < maxAttachments && !readOnly()) {
+              <label class="dropzone" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple (change)="onFileInput($event)" />
+                <app-icon name="upload" [size]="24" />
+                <strong>{{ uploading() ? 'Mengunggah...' : 'Pilih file atau seret ke sini' }}</strong>
+                <small>{{ attachments().length }} dari {{ maxAttachments }} file</small>
+              </label>
+            }
+
+            @if (uploadError(); as uploadErr) {
+              <p class="field-error">{{ uploadErr }}</p>
+            }
+
+            @if (attachments().length) {
+              <ul class="files">
+                @for (file of attachments(); track file.id) {
+                  <li>
+                    <app-icon name="file" [size]="20" />
+                    <button type="button" class="file-name" (click)="openAttachment(file)">{{ file.fileName }}</button>
+                    <small>{{ formatSize(file.size) }}</small>
+                    @if (!readOnly()) {
+                      <button type="button" class="icon-btn" (click)="removeAttachment(file)" [attr.aria-label]="'Hapus ' + file.fileName">
+                        <app-icon name="trash" [size]="18" />
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
+
+        @case (3) {
+          <!-- 3. PILIHAN JURUSAN -->
+          <form [formGroup]="majorForm" (ngSubmit)="next()" novalidate>
+            <div class="grid">
+              <label class="field">
+                <span>Pilihan jurusan 1</span>
+                <select formControlName="major1Id" [attr.aria-invalid]="isInvalid(majorForm.controls.major1Id)">
+                  <option [ngValue]="null" disabled>Pilih jurusan</option>
+                  @for (m of majors(); track m.id) {
+                    <option [ngValue]="m.id">{{ m.name }}</option>
+                  }
+                </select>
+                @if (isInvalid(majorForm.controls.major1Id)) {
+                  <small class="field-error">Pilihan jurusan 1 wajib diisi</small>
+                }
+                @if (major1(); as m) {
+                  <div class="subjects">
+                    <small>Mapel yang dibutuhkan:</small>
+                    @for (s of m.requiredSubjects; track s) {
+                      <span class="chip">{{ s }}</span>
+                    }
+                  </div>
+                }
+              </label>
+
+              <label class="field">
+                <span>Pilihan jurusan 2</span>
+                <select formControlName="major2Id" [attr.aria-invalid]="isInvalid(majorForm.controls.major2Id) || majorForm.hasError('sameMajor')">
+                  <option [ngValue]="null" disabled>Pilih jurusan</option>
+                  @for (m of majors(); track m.id) {
+                    <option [ngValue]="m.id" [disabled]="m.id === major1()?.id">{{ m.name }}</option>
+                  }
+                </select>
+                @if (isInvalid(majorForm.controls.major2Id)) {
+                  <small class="field-error">Pilihan jurusan 2 wajib diisi</small>
+                }
+                @if (majorForm.hasError('sameMajor')) {
+                  <small class="field-error">Pilihan 2 harus berbeda dengan pilihan 1</small>
+                }
+                @if (major2(); as m) {
+                  <div class="subjects">
+                    <small>Mapel yang dibutuhkan:</small>
+                    @for (s of m.requiredSubjects; track s) {
+                      <span class="chip">{{ s }}</span>
+                    }
+                  </div>
+                }
+              </label>
+            </div>
+          </form>
+
+          <div class="note">
+            <app-icon name="info" [size]="26" />
+            <div>
+              <strong>Pilihan 1 diprioritaskan</strong>
+              <p>
+                Kelas disusun terutama dari mapel yang dibutuhkan pilihan 1. Pilihan 2 jadi cadangan kalau tidak ada kelas
+                yang cocok dengan pilihan 1.
+              </p>
+            </div>
+          </div>
+        }
+
+        @case (4) {
+          <!-- 4. TINJAU -->
+          <div class="review">
+            <section>
+              <div class="review-head">
+                <h3>Data diri</h3>
+                @if (!readOnly()) {
+                  <button type="button" class="link" (click)="goTo(1)">Ubah</button>
+                }
+              </div>
+              <dl>
+                <dt>Nama lengkap</dt>
+                <dd>{{ data()?.student?.fullName }}</dd>
+                <dt>NIS</dt>
+                <dd>{{ data()?.student?.studentNumber }}</dd>
+                <dt>Kelas saat ini</dt>
+                <dd>{{ data()?.student?.classLabel ?? '-' }}</dd>
+              </dl>
+            </section>
+
+            <section>
+              <div class="review-head">
+                <h3>Cita-cita</h3>
+                @if (!readOnly()) {
+                  <button type="button" class="link" (click)="goTo(2)">Ubah</button>
+                }
+              </div>
+              <dl>
+                <dt>Cita-cita</dt>
+                <dd>{{ aspirationForm.controls.aspiration.value || '-' }}</dd>
+                <dt>Penunjang</dt>
+                <dd class="multiline">{{ aspirationForm.controls.supportingActivities.value || '-' }}</dd>
+                <dt>Dokumen</dt>
+                <dd>
+                  @if (attachments().length) {
+                    <ul class="file-names">
+                      @for (file of attachments(); track file.id) {
+                        <li><app-icon name="file" [size]="16" /> {{ file.fileName }}</li>
+                      }
+                    </ul>
+                  } @else {
+                    -
+                  }
+                </dd>
+              </dl>
+            </section>
+
+            <section>
+              <div class="review-head">
+                <h3>Pilihan jurusan</h3>
+                @if (!readOnly()) {
+                  <button type="button" class="link" (click)="goTo(3)">Ubah</button>
+                }
+              </div>
+              <dl>
+                <dt>Pilihan 1</dt>
+                <dd>
+                  {{ major1()?.name ?? '-' }}
+                  @if (major1(); as m) {
+                    <span class="subjects inline">
+                      @for (s of m.requiredSubjects; track s) {
+                        <span class="chip">{{ s }}</span>
+                      }
+                    </span>
+                  }
+                </dd>
+                <dt>Pilihan 2</dt>
+                <dd>
+                  {{ major2()?.name ?? '-' }}
+                  @if (major2(); as m) {
+                    <span class="subjects inline">
+                      @for (s of m.requiredSubjects; track s) {
+                        <span class="chip">{{ s }}</span>
+                      }
+                    </span>
+                  }
+                </dd>
+              </dl>
+            </section>
+
+            @if (!readOnly()) {
+              <label class="confirm">
+                <input type="checkbox" [formControl]="confirmed" />
+                <span>Saya menyatakan jawaban ini benar dan diisi sendiri. Setelah dikirim, jawaban tidak bisa diubah.</span>
+              </label>
+              @if (confirmed.touched && confirmed.invalid) {
+                <small class="field-error">Centang pernyataan ini sebelum mengirim.</small>
+              }
+            }
+          </div>
+        }
+      }
+
+      @if (message(); as msg) {
+        <p class="message" [class.error]="msg.type === 'error'" role="status">{{ msg.text }}</p>
+      }
+
+      <!-- ============ TOMBOL ============ -->
+      <footer class="actions">
+        <div>
+          @if (step() > 1 && !readOnly()) {
+            <button type="button" class="btn btn-ghost" (click)="prev()">
+              <app-icon name="arrow-left" [size]="18" />
+              Sebelumnya
+            </button>
+          }
+        </div>
+
+        <div class="actions-right">
+          @if (readOnly()) {
+            <a class="btn btn-primary" routerLink="/murid">Kembali ke beranda</a>
+          } @else {
+            @if (step() > 1) {
+              <button type="button" class="btn btn-secondary" (click)="saveDraft()" [disabled]="saving()">
+                <app-icon name="save" [size]="18" />
+                {{ saving() ? 'Menyimpan...' : 'Simpan draf' }}
+              </button>
+            }
+            @if (step() < 4) {
+              <button type="button" class="btn btn-primary" (click)="next()">
+                Lanjut
+                <app-icon name="arrow-right" [size]="18" />
+              </button>
+            } @else {
+              <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting()">
+                <app-icon name="send" [size]="18" />
+                {{ submitting() ? 'Mengirim...' : 'Kirim kuesioner' }}
+              </button>
+            }
+          }
+        </div>
+      </footer>
+    </section>
+  }
+</div>

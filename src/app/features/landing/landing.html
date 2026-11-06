@@ -1,0 +1,182 @@
+<div class="landing">
+  <!-- ============ HEADER ============ -->
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" routerLink="/">
+        <app-brand-mark [size]="36" />
+        <span class="brand-text">
+          <strong>{{ branding.schoolName }}</strong>
+          <small>{{ branding.appName }}</small>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Navigasi halaman">
+        <a href="#alur" (click)="scrollTo($event, 'alur')">Alur</a>
+        <a href="#fitur" (click)="scrollTo($event, 'fitur')">Fitur</a>
+        <a href="#faq" (click)="scrollTo($event, 'faq')">FAQ</a>
+      </nav>
+
+      @if (user()) {
+        <a class="btn btn-primary" [routerLink]="dashboardPath()">Buka dashboard</a>
+      } @else {
+        <a class="btn btn-primary" routerLink="/login">Masuk</a>
+      }
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">Penjurusan kelas 11 · Kurikulum Merdeka</p>
+          <h1>Pilih kelas mapel pilihan yang <span class="accent">sesuai cita-citamu</span></h1>
+          <p class="lead">
+            Isi pilihan jurusan kuliah, lihat seberapa cocok setiap kelas denganmu,
+            lalu pilih kelas yang paling tepat. Semua dalam satu portal.
+          </p>
+
+          <div class="actions">
+            @if (user()) {
+              <a class="btn btn-primary btn-lg" [routerLink]="dashboardPath()">Buka dashboard</a>
+            } @else {
+              <a class="btn btn-primary btn-lg" routerLink="/login">Masuk dengan akun sekolah</a>
+            }
+            <a class="btn btn-secondary btn-lg" href="#alur" (click)="scrollTo($event, 'alur')">Lihat alur</a>
+          </div>
+        </div>
+
+        <!-- Contoh kelas hasil pemetaan -->
+        <div class="preview" aria-hidden="true">
+          <div class="preview-head">
+            <div>
+              <span class="label">Kelas</span>
+              <strong class="class-name">XI-3</strong>
+            </div>
+            <span class="tag">Campuran</span>
+          </div>
+
+          <ul class="subjects">
+            <li class="ipa">Biologi</li>
+            <li class="ipa">Kimia</li>
+            <li class="ipa">Matematika Lanjut</li>
+            <li class="ips">Ekonomi</li>
+            <li class="ips">Geografi</li>
+          </ul>
+
+          <div class="match">
+            <div class="match-row">
+              <span>Kecocokan dengan pilihanmu</span>
+              <strong>88%</strong>
+            </div>
+            <div class="bar"><i style="width: 88%"></i></div>
+          </div>
+
+          <div class="preview-foot">
+            <span>34 / 36 murid</span>
+            <span class="ok">Kursi tersedia</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ALUR ============ -->
+    <section id="alur" class="section">
+      <div class="container">
+        <h2>Alurnya</h2>
+        <p class="section-lead">Lima langkah dari kuesioner sampai kelas final.</p>
+
+        <ol class="steps">
+          <li>
+            <span class="num">1</span>
+            <h3>Isi kuesioner</h3>
+            <p>Pilih jurusan kuliah 1 dan 2.</p>
+          </li>
+          <li>
+            <span class="num">2</span>
+            <h3>Kelas disusun</h3>
+            <p>Sistem menyusun mapel pilihan untuk seluruh angkatan.</p>
+          </li>
+          <li>
+            <span class="num">3</span>
+            <h3>Pilih kelas</h3>
+            <p>Bandingkan persentase kecocokan setiap kelas.</p>
+          </li>
+          <li>
+            <span class="num">4</span>
+            <h3>Surat pernyataan</h3>
+            <p>Tanda tangan digital orang tua, lalu unggah.</p>
+          </li>
+          <li>
+            <span class="num">5</span>
+            <h3>Kelas final</h3>
+            <p>Ditetapkan setelah pemerataan dan persetujuan waka.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ FITUR ============ -->
+    <section id="fitur" class="section section-subtle">
+      <div class="container">
+        <h2>Yang kamu dapat</h2>
+        <p class="section-lead">Transparan untuk murid, efisien untuk sekolah.</p>
+
+        <div class="features">
+          <div class="feature">
+            <h3>Persentase kecocokan</h3>
+            <p>Lihat kelas mana yang paling sesuai dengan jurusan pilihan dan nilai rapormu.</p>
+          </div>
+          <div class="feature">
+            <h3>Kelas yang merata</h3>
+            <p>Maksimal 36 murid per kelas, dengan lima mapel pilihan yang disusun dari kebutuhan angkatan.</p>
+          </div>
+          <div class="feature">
+            <h3>Pilihan cadangan</h3>
+            <p>Pilihan jurusan kedua tetap diperhitungkan kalau pilihan pertama tidak tersedia.</p>
+          </div>
+          <div class="feature">
+            <h3>Tanpa kertas</h3>
+            <p>Kuesioner, pilihan kelas, dan surat pernyataan semuanya online.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section id="faq" class="section">
+      <div class="container narrow">
+        <h2>Pertanyaan umum</h2>
+
+        <div class="faq">
+          <details>
+            <summary>Akun apa yang dipakai untuk masuk?</summary>
+            <p>Akun Google, misalnya akun belajar.id. Saat pertama kali masuk, kamu diminta mengisi kode sekolah, NIS, dan tanggal lahir untuk mengaktifkan akun.</p>
+          </details>
+          <details>
+            <summary>Kode sekolah didapat dari mana?</summary>
+            <p>Dari waka kurikulum atau wali kelasmu.</p>
+          </details>
+          <details>
+            <summary>Apakah kelas yang saya pilih langsung final?</summary>
+            <p>Belum. Kelas yang peminatnya lebih dari kapasitas akan diratakan, dengan tetap mengutamakan kecocokan dengan pilihan jurusanmu.</p>
+          </details>
+          <details>
+            <summary>Bisakah saya mengganti pilihan kelas?</summary>
+            <p>Bisa, selama masa pemilihan kelas masih dibuka.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>© {{ year }} {{ branding.schoolName }}</span>
+      <span>Didukung {{ branding.appName }}</span>
+    </div>
+  </footer>
+
+  <!-- Popup login (route anak /login) -->
+  <router-outlet />
+</div>

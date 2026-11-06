@@ -1,0 +1,464 @@
+.default-btn-page {
+	background: #b90a29 none repeat scroll 0 0;
+	border: 1px solid #b90a29;
+	border-radius: 3px;
+	color: #fff;
+	font-size: 18px;
+	padding: 14px 10px;
+	width: 100%;
+	cursor: pointer;
+	font-family: 'din-reg', arial
+}
+
+.accordion {
+    /* background-color: #eee; */
+    /* color: #444; */
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    transition: 0.4s;
+  }
+  
+  .active, .accordion:hover {
+    background-color: white;
+  }
+  
+  .accordion:after {
+    /* content: '\002B'; */
+    /* color: #777; */
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+  }
+  
+  .active:after {
+    /* content: "\2212"; */
+  }
+  
+  .panel {
+    padding: 0 18px;
+    /* background-color: #777; */
+    max-height: 0;
+	overflow: hidden;
+	width: 100%;
+	color: black;
+    transition: max-height 0.2s ease-out;
+  }
+
+.result-text {
+	margin-top: 12px
+}
+
+.auto-redirect {
+	text-align: right
+}
+
+.paymentcode {
+	text-align: center
+}
+
+.paymentcodetitle {
+	float: left;
+	font-weight: bold;
+	color: black
+}
+
+.right-head-paymentcode {
+	width: 75%
+}
+
+.right-head-paymentcode img {
+	width: 65%
+}
+
+.logo-alfa img {
+	height: 65px
+}
+
+.logo-atm img {
+	height: auto;
+	width: 100%
+}
+
+.center-object {
+	margin: auto;
+	text-align: center
+}
+
+.lang {
+	z-index: 111;
+	margin-top: -3px;
+	text-align: center;
+}
+
+.lang a {
+	background: #b5b5b5;
+	color: #fff;
+	margin-right: -10px;
+	padding: 5px 20px 0 20px;
+	border-radius: 0 0 10px 10px;
+	font-size: 14px;
+	text-decoration: none
+}
+
+.top-page-right {
+	text-align: right;
+	margin-right: 20px
+}
+
+.basket-ct{
+	text-align: center;
+  font-weight: bold;
+	font-size: 12px;
+}
+
+.basket-ct a {
+	background: #ffba00;
+	padding: 2px 10px;
+	border-radius: 10px;
+	color: #fff;
+}
+
+.arrow-basket {
+	display: table-cell;
+	width: 0px;
+	height: 0px;
+	border: 6px solid transparent;
+	border-top-color: #FFF;
+}
+
+
+.daterangepicker-wrapper{
+  position: relative;
+  border: none;
+}
+
+.daterangepicker {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-size: 14px;
+  position: absolute;
+  top: 44px;
+  background: #fff;
+}
+
+.daterangepicker.always-open{
+  top: 0;
+  box-shadow: none;
+}
+
+.daterangepicker.open-right{
+  right: 0;
+}
+
+.daterangepicker.open-left{
+  left: 0;
+}
+
+.daterangepicker.open-center{
+  right: -50%;
+}
+
+.daterangepicker.tooltip-chevron:before{
+  content: '';
+  height: 0px;
+  width: 0px;
+  border: 10px solid transparent;
+  position: absolute;
+  border-bottom-color: #aaa; 
+  top: -20px;
+}
+
+.daterangepicker.tooltip-chevron:after{
+  content: '';
+  height: 0px;
+  width: 0px;
+  border: 9px solid transparent;
+  position: absolute;
+  border-bottom-color: #fff;
+  top: -18px;
+}
+
+.daterangepicker.open-left.tooltip-chevron:before{
+  left: 10px;
+}
+
+.daterangepicker.open-left.tooltip-chevron:after{
+  left: 11px;
+}
+
+.daterangepicker.open-right.tooltip-chevron:before{
+  right: 10px;
+}
+
+.daterangepicker.open-right.tooltip-chevron:after{
+  right: 11px;
+}
+
+.daterangepicker.open-center.tooltip-chevron:before{
+  left: 50%
+}
+
+.daterangepicker.open-center.tooltip-chevron:after{
+  left: 50%;
+}
+
+@media (min-width: 550px) {
+  .daterangepicker {
+      width: 550px;
+  }
+}
+
+@media (max-width: 550px) {
+  .daterangepicker {
+      width: 270px;
+  }
+  .text-center .pull-right {
+      float: none !important;
+  }
+  .col-md-6 {
+      width: 100% !important;
+  }
+  .col-md-10 {
+      width: 100% !important;
+  }
+  .ranges > div {
+      display: none;
+  }
+}
+
+.singledatepicker {
+  width: 225px;
+}
+
+.daterangepicker {
+  z-index: 3000;
+  border-radius: 4px;
+  box-shadow: 0px 2px 2px 2px #ddd;
+  border: 1px solid #aaa;
+  padding: 10px;
+}
+
+.daterangepicker div[class*="col-md-"],
+.daterangepicker span[class*="col-md-"] {
+  padding: 0 15px 0 5px;
+}
+
+.hidden {
+  display: none !important;
+  visibility: false !important;
+}
+
+.daterangepicker .calendar {
+  margin: 4px;
+  float: left;
+  border-radius: 4px !important;
+  padding: 0 5px 0 5px;
+}
+
+.applyBtn {
+  margin: 4px;
+}
+
+.daterangepicker .flush {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.daterangepicker .flussh {
+  padding: 0 !important;
+}
+
+.daterangepicker .flush-bottom {
+  padding-bottom: 0 !important;
+}
+
+.daterangepicker .flush-left {
+  padding-left: 0 !important;
+}
+
+.daterangepicker .flush-right {
+  padding-right: 0 !important;
+}
+
+.daterangepicker .nudge-half--left {
+  padding-left: 4px !important;
+}
+
+.daterangepicker .nudge-half--right {
+  padding-right: 4px !important;
+}
+
+.daterangepicker .nudge-top {
+  top: 5px;
+}
+
+.daterangepicker .push-bottom {
+  margin-bottom: 10px;
+}
+
+.daterangepicker th {
+  margin: 1px !important;
+  padding: 1px !important;
+  text-align: center;
+  border-radius: 4px !important;
+}
+
+.daterangepicker td {
+  font-size: 14px;
+  height: 20px;
+  width: 20px;
+  text-align: center;
+  margin: 1px !important;
+  padding: 3px !important;
+  border-radius: 4px !important;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.daterangepicker .btn.btn-flat {
+  border: none;
+  background: transparent;
+  margin: 3px !important;
+  padding: 1px !important;
+}
+
+.daterangepicker .off {
+  color: #666;
+}
+
+.daterangepicker table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.daterangepicker td,
+.daterangepicker th {
+  padding: 0;
+}
+
+.daterangepicker .clickable {
+  cursor: pointer;
+}
+
+.daterangepicker .clickable-link {
+  color: #337ab7;
+}
+
+.daterangepicker .clickable.disabled {
+  pointer-events: none;
+  color: #AAA;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ranges{
+  padding: 5px 0;
+}
+
+.ranges .clickable {
+  margin-top: 8px !important;
+}
+
+.daterangepicker label {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.daterangepicker .form-control{
+  margin: 5px;
+}
+
+.daterangepicker .btn-link {
+  padding: 1px 6px 1px 6px !important;
+}
+
+.daterangepicker .bootstrap-flush{
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.daterangepicker .time-picker span{
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.daterangepicker .time-picker .time-breadcrumb{
+  position: relative;
+  top: 22px;
+  font-weight: bolder;
+  font-size: 0.8em;
+}
+
+.daterangepicker .col-md-1,
+.daterangepicker .col-md-2,
+.daterangepicker .col-md-3,
+.daterangepicker .col-md-4,
+.daterangepicker .col-md-5,
+.daterangepicker .col-md-6,
+.daterangepicker .col-md-7,
+.daterangepicker .col-md-8,
+.daterangepicker .col-md-9,
+.daterangepicker .col-md-10,
+.daterangepicker .col-md-11,
+.daterangepicker .col-md-12 {
+  position: relative;
+  float: left;
+}
+
+.daterangepicker .col-md-12 {
+  width: 100%;
+}
+
+.daterangepicker .col-md-11 {
+  width: 91.66666667%;
+}
+
+.daterangepicker .col-md-10 {
+  width: 83.33333333%;
+}
+
+.daterangepicker .col-md-9 {
+  width: 75%;
+}
+
+.daterangepicker .col-md-8 {
+  width: 66.66666667%;
+}
+
+.daterangepicker .col-md-7 {
+  width: 58.33333333%;
+}
+
+.daterangepicker .col-md-6 {
+  width: 50%;
+}
+
+.daterangepicker .col-md-5 {
+  width: 41.66666667%;
+}
+
+.daterangepicker .col-md-4 {
+  width: 33.33333333%;
+}
+
+.daterangepicker .col-md-3 {
+  width: 25%;
+}
+
+.daterangepicker .col-md-2 {
+  width: 16.66666667%;
+}
+
+.daterangepicker .col-md-1 {
+  width: 8.33333333%;
+}
+
+.daterangepicker .col-md-offset-4 {
+  margin-left: 33.333333333%;
+}

@@ -1,0 +1,332 @@
+h3 {
+  font-weight: bolder;
+  font-size: 20px;
+  line-height: 30px;
+  color: #000000;
+  margin-bottom: 4px
+}
+
+.primary {
+  color: #E1251B
+}
+
+.d-flex {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center
+}
+
+.font-bold {
+  font-weight: bolder
+}
+
+.copy-btn {
+  padding-right: 0;
+  background-color: transparent;
+  border: none;
+  color: #999999;
+  text-transform: capitalize
+}
+
+.d-grid {
+  display: grid;
+  grid-gap: 8px
+}
+.d-grid.grid-col-3 {
+  grid-template-columns: auto auto auto
+}
+.d-grid.grid-col-2 {
+  grid-template-columns: auto auto
+}
+.response .response-logo {
+  height: 56px
+}
+.response .response-data span:nth-child(2n) {
+  color: #1a1a1a;
+  font-weight: bolder;
+  text-align: right
+}
+
+.alert {
+  font-weight: bolder;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  /* justify-content: start; */
+  margin: 0;
+  max-width: unset !important;
+  width: 100% !important
+}
+.alert mat-icon {
+  margin-right: 12px
+}
+.alert.warning {
+  background-color: #FFE7D4;
+  color: #DA7B23
+}
+.container {
+  padding: 0px 24px
+}
+.container:after {
+  clear: none
+}
+
+mat-card {
+  border-radius: 8px !important
+}
+
+.mat-expansion-panel:first-of-type {
+  border-top-right-radius: 8px !important;
+  border-top-left-radius: 8px !important
+}
+
+.mat-expansion-panel:last-of-type {
+  border-bottom-right-radius: 8px !important;
+  border-bottom-left-radius: 8px !important
+}
+
+.mat-expansion-panel-spacing {
+  margin: 0 !important
+}
+
+.header {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  overflow: hidden;
+  z-index: 999;
+  background-color: #fff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
+  background-color: white;
+  padding: 12px 24px
+}
+.header mat-icon {
+  font-size: 24px
+}
+.header .merchant-logo {
+  font-size: 24px
+}
+
+.countdown {
+  margin-top: 60px;
+  padding: 12px 24px !important;
+  height: 52px;
+  margin-bottom: 16px
+}
+@media (min-width: 992px) {
+  .countdown {
+    justify-content: center
+  }
+  .countdown .text {
+    margin-right: 20px
+  }
+  .countdown .timer {
+    margin-left: 20px
+  }
+}
+
+.detail-payment {
+  margin: 24px 0;
+  padding: 0px !important
+}
+.detail-payment .detail-payment-top {
+  padding: 16px 16px 0
+}
+.detail-payment .detail-payment-top .order-id {
+  color: #999999
+}
+.detail-payment .detail-payment-middle {
+  padding: 0px 16px;
+  margin-top: 4px
+}
+.detail-payment .detail-payment-middle .total-payment {
+  font-size: 20px;
+  color: #E1251B
+}
+.detail-payment .detail-payment-bottom {
+  margin-top: 8px;
+  padding: 12px 0px 12px;
+  color: #4D4D4D;
+  font-weight: 500;
+  background-color: #e6e6e6;
+  line-height: 14px
+}
+
+.details-overview.bottom-modal {
+  padding: 13px 10px
+}
+.details-overview.bottom-modal h4 {
+  margin-bottom: 24px
+}
+.details-overview.bottom-modal mat-list-item {
+  padding-left: 0px
+}
+.details-overview.bottom-modal ul li:nth-child(even) {
+  margin-bottom: 16px
+}
+
+.payment-method h3 {
+  font-size: 16px;
+  color: #4D4D4D
+}
+.payment-method .payment-icon {
+  margin-right: 16px
+}
+.payment-method .payment-icon img {
+  height: 24px;
+  width: auto
+}
+.payment-method .va-list-item {
+  padding: 8px 0
+}
+
+.detail-paycode {
+  margin: 4px 0 24px
+}
+.detail-paycode .payment-method,
+.detail-paycode .payment-method-number,
+.detail-paycode .complete-payment-before,
+.detail-paycode .payment-status {
+  color: #999999
+}
+.detail-paycode ul li {
+  padding: 4px 0px
+}
+.detail-paycode ul li:nth-child(even) {
+  /* margin-bottom: 16px */
+}
+
+.button-bot {
+  margin: 24px 0;
+  text-align: center
+}
+
+.left-side {
+  width: 67%
+}
+
+.right-side {
+  width: 30%
+}
+
+.details-overview ul {
+  margin-top: 16px
+}
+.details-overview ul li:nth-child(odd) {
+  color: #999999
+}
+.details-overview ul li:nth-child(even) {
+  margin-bottom: 16px
+}
+
+.swal2-popup {
+  background: #ffffff !important;
+  padding: 0 !important;
+  border-radius: 0.625em !important;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.05), 0px 16px 20px rgba(0, 0, 0, 0.08) !important
+}
+
+.swal2-header-error {
+	border-radius: 10px 10px 0px 0px;
+	background: #E1251B;
+	padding: 1em
+}
+
+.swal2-header-success {
+	border-radius: 10px 10px 0px 0px;
+	background: #00A19B;
+	padding: 1em
+}
+
+.swal2-header-warning {
+	border-radius: 10px 10px 0px 0px;
+	background: #DA7B23;
+	padding: 1em
+}
+
+.swal2-title {
+  font-size: 1.25em !important;
+  color: #ffffff !important;
+  font-weight: bold !important
+}
+
+.swal2-title-modal-medium {
+  padding-top: 40px !important;
+  font-size: 1em !important;
+  color: #000000 !important;
+  font-weight: bold !important
+}
+
+.swal2-content {
+	font-size: 1em !important;
+	line-height: 24px !important;
+	font-weight: normal !important;
+	padding: 1em !important
+}	
+
+.swal2-styled.swal2-confirm {
+  font-size: 0.875em !important;
+  margin-bottom: 1.25em !important
+}
+
+.swal2-styled.swal2-cancel {
+  color: #E1251B !important;
+  font-size: 0.875em !important;
+  margin-bottom: 1.25em !important
+}
+
+.swal2-icon.swal2-error [class^=swal2-x-mark-line] {
+  background-color: #ffffff !important;
+  top: 1.9125em !important;
+  width: 1.9375em !important;
+  height: .3125em !important
+}
+
+.swal2-icon.swal2-error [class^=swal2-x-mark-line][class$=left] {
+  left: 1.075em !important
+}
+
+.swal2-icon.swal2-error [class^=swal2-x-mark-line][class$=right] {
+	right: 1.075em !important
+}
+
+.swal2-icon.swal2-success [class^=swal2-success-line] {
+  background-color: #ffffff !important
+}
+
+
+.swal2-icon.swal2-success [class^=swal2-success-circular-line][class$=left] {
+  background-color: transparent !important
+}
+
+.swal2-icon.swal2-success [class^=swal2-success-circular-line][class$=right] {
+  background-color: transparent !important
+}
+
+
+.swal2-icon.swal2-success .swal2-success-fix {
+  background-color: transparent !important
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+  border: .25em solid #ffffff !important
+}
+
+.swal2-icon.swal2-error {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  width: 4em !important;
+	height: 4em !important
+}
+
+.swal2-icon.swal2-success {
+  border-color: #ffffff !important;
+  color: #ffffff !important
+}
+
+.list-style-none {
+  list-style: none;
+}

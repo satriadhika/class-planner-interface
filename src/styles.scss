@@ -1,0 +1,162 @@
+/* =====================================================================
+   Token global. Mode gelap mengikuti setting OS.
+   Font: Plus Jakarta Sans (dimuat di src/index.html).
+   ===================================================================== */
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --bg: #ffffff;
+  --bg-subtle: #f7f7f9;
+  --surface: #ffffff;
+  --border: #e7e7ec;
+  --border-strong: #d4d4dc;
+  --text: #16171d;
+  --muted: #5f6170;
+  --faint: #8b8d9a;
+
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-soft: #eef0ff;
+  --on-primary: #ffffff;
+
+  --success: #2f7a45;
+  --success-soft: #e8f5ec;
+  --warning: #9a5b13;
+  --warning-soft: #fdf3e6;
+  --danger: #c62828;
+  --danger-soft: #fdeeee;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 2px rgb(16 17 26 / 0.04), 0 8px 24px -12px rgb(16 17 26 / 0.12);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1015;
+    --bg-subtle: #15161d;
+    --surface: #17181f;
+    --border: #262833;
+    --border-strong: #353846;
+    --text: #ececf1;
+    --muted: #a2a4b3;
+    --faint: #767887;
+
+    --primary: #8b85ff;
+    --primary-hover: #a19cff;
+    --primary-soft: #1f1f3a;
+    --on-primary: #0f1015;
+
+    --success: #8fd4a0;
+    --success-soft: #16291c;
+    --warning: #f0c085;
+    --warning-soft: #2e2214;
+    --danger: #ff8a80;
+    --danger-soft: #331a1a;
+
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* kunci scroll halaman saat popup terbuka */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* tombol yang dipakai di banyak halaman */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+
+  &:hover {
+    background: var(--primary-hover);
+  }
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+
+  &:hover {
+    background: var(--bg-subtle);
+  }
+}
+
+.btn-lg {
+  padding: 13px 22px;
+  font-size: 1rem;
+}

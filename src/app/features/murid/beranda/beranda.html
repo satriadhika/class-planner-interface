@@ -1,0 +1,152 @@
+<div class="page">
+  @if (error(); as message) {
+    <section class="card state-card error" role="alert">
+      <app-icon name="info" [size]="22" />
+      <div>
+        <strong>{{ message }}</strong>
+        <button type="button" class="link-btn" (click)="reload()">Coba lagi</button>
+      </div>
+    </section>
+  } @else if (!loaded()) {
+    <!-- kerangka saat memuat -->
+    <section class="card skeleton" aria-busy="true" aria-label="Memuat progres">
+      <i></i><i></i><i class="short"></i>
+    </section>
+  } @else if (noCycle()) {
+    <section class="card state-card">
+      <app-icon name="clock" [size]="22" />
+      <div>
+        <strong>Periode penjurusan belum dibuka</strong>
+        <p>Waka kurikulum akan membuka kuesioner untuk angkatanmu. Cek halaman ini lagi nanti.</p>
+      </div>
+    </section>
+  } @else {
+    <!-- Langkah berikutnya -->
+    @if (current(); as step) {
+      <section class="card next-step">
+        <div>
+          <p class="eyebrow">Langkah berikutnya</p>
+          <h2>{{ step.label }}</h2>
+          <p>{{ step.description }}</p>
+        </div>
+        <a class="btn-primary" [routerLink]="step.route">
+          {{ step.cta }}
+          <app-icon name="arrow-right" [size]="18" />
+        </a>
+      </section>
+    }
+
+    <!-- Info tenggat -->
+    @if (deadline(); as d) {
+      <section class="card notice">
+        <span class="notice-icon"><app-icon name="clock" [size]="24" /></span>
+        <div class="notice-body">
+          <h3>{{ d.title }}</h3>
+          <p>
+            @if (d.kind === 'survey') {
+              Jawaban bisa disimpan sebagai draf dan diubah sampai kamu menekan tombol kirim.
+            } @else {
+              Kamu masih bisa mengganti pilihan selama masa pemilihan dibuka. Hasil akhir ditetapkan setelah
+              pemerataan kelas dan persetujuan waka kurikulum.
+            }
+          </p>
+          <small>{{ cycle()?.name }}</small>
+        </div>
+      </section>
+    }
+  }
+
+  <!-- Banner -->
+  <section class="banner">
+    <div class="banner-text">
+      <p class="banner-eyebrow">Portal penjurusan</p>
+      <h2>Pantau setiap tahap dengan tenang.</h2>
+      <p>Kuesioner, pilihan kelas, surat pernyataan, dan hasil akhir ada di satu tempat.</p>
+    </div>
+    <a class="btn-light" routerLink="/murid/panduan">
+      <app-icon name="book" [size]="18" />
+      Baca panduan
+    </a>
+  </section>
+
+  @if (loaded() && !noCycle()) {
+    <div class="lower">
+      <!-- Progres -->
+      <section class="progress">
+        <div class="section-head">
+          <h2>Progres penjurusanmu</h2>
+          <p>{{ doneCount() }} dari {{ stages().length }} tahap selesai</p>
+        </div>
+
+        <div class="card progress-card">
+          <div class="progress-top">
+            <span><strong>{{ percent() }}%</strong> selesai</span>
+          </div>
+          <div class="bar" role="progressbar" [attr.aria-valuenow]="percent()" aria-valuemin="0" aria-valuemax="100">
+            <i [style.width.%]="percent()"></i>
+          </div>
+
+          <ol class="stages">
+            @for (stage of stages(); track stage.key; let i = $index) {
+              <li [class]="stage.status">
+                <span class="stage-icon">
+                  @switch (stage.status) {
+                    @case ('done') {
+                      <app-icon name="check" [size]="16" />
+                    }
+                    @case ('current') {
+                      {{ i + 1 }}
+                    }
+                    @case ('missed') {
+                      <app-icon name="x" [size]="14" />
+                    }
+                    @default {
+                      <app-icon name="lock" [size]="14" />
+                    }
+                  }
+                </span>
+                <div class="stage-text">
+                  <strong>{{ stage.label }}</strong>
+                  <small>
+                    {{ statusLabel[stage.status] }}
+                    @if (stage.status === 'done' && stage.completedAt) {
+                      · {{ formatDateTime(stage.completedAt) }}
+                    }
+                  </small>
+                </div>
+                @if (stage.status === 'done' || stage.status === 'current') {
+                  <a class="stage-link" [routerLink]="stage.route">Buka</a>
+                }
+              </li>
+            }
+          </ol>
+        </div>
+      </section>
+
+      <!-- Riwayat aktivitas -->
+      <section class="history">
+        <div class="section-head">
+          <h2>Aktivitas terakhir</h2>
+          <p>Tercatat otomatis oleh sistem</p>
+        </div>
+        <div class="card">
+          @if (activities().length === 0) {
+            <p class="empty">Belum ada aktivitas.</p>
+          } @else {
+            <ul class="timeline">
+              @for (a of activities(); track a.id) {
+                <li>
+                  <strong>{{ activityLabel(a.action) }}</strong>
+                  @if (a.detail && a.action.startsWith('ATTACHMENT')) {
+                    <span class="detail">{{ a.detail }}</span>
+                  }
+                  <time [attr.datetime]="a.createdAt">{{ formatDateTime(a.createdAt) }}</time>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</div>

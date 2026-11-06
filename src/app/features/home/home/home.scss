@@ -1,0 +1,20 @@
+.home {
+  max-width: 480px;
+  margin: 48px auto;
+  padding: 0 16px;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  margin: 16px 0 24px;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+}
