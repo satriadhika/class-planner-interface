@@ -13,10 +13,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { problemCode, problemMessage } from '../../../core/api/problems';
+import { problemCode, problemMessage } from '../../../core/api/problem';
 import { LoginResponse } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
-import { GoogleIdentityService } from '../../../core/auth/google-identity';
+import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
 import { BRANDING } from '../../../core/config/branding';
 import { BrandMark } from '../../../shared/brand-mark/brand-mark';
 

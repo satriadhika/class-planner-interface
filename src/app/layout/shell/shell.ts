@@ -4,7 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { GoogleIdentityService } from '../../core/auth/google-identity';
+import { GoogleIdentityService } from '../../core/auth/google-identity.service';
 import { BRANDING } from '../../core/config/branding';
 import { MuridProgressService, StageKey, StageStatus } from '../../features/murid/murid-progress.service';
 import { BrandMark } from '../../shared/brand-mark/brand-mark';

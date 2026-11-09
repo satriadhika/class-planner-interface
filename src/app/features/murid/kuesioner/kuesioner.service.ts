@@ -15,13 +15,6 @@ export interface MajorOption {
   requiredSubjects: string[];
 }
 
-export interface Attachment {
-  id: number;
-  fileName: string;
-  contentType: string;
-  size: number;
-}
-
 export interface KuesionerData {
   status: KuesionerStatus;
   /** false kalau sudah dikirim atau periode kuesioner sudah tutup */
@@ -35,7 +28,9 @@ export interface KuesionerData {
   };
   aspiration: string;
   supportingActivities: string;
-  attachments: Attachment[];
+  /** Minat IPA & IPS, skala 1–5 */
+  interestIpa: number | null;
+  interestIps: number | null;
   major1Id: number | null;
   major2Id: number | null;
 }
@@ -44,13 +39,11 @@ export interface KuesionerData {
 export interface KuesionerAnswers {
   aspiration: string;
   supportingActivities: string;
+  interestIpa: number | null;
+  interestIps: number | null;
   major1Id: number | null;
   major2Id: number | null;
 }
-
-export const MAX_ATTACHMENTS = 3;
-export const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
-export const ALLOWED_ATTACHMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 /** Bentuk response GET/PUT /me/questionnaire dari backend (tanggal ISO). */
 interface QuestionnaireView extends Omit<KuesionerData, 'closeAtLabel' | 'submittedAtLabel'> {
@@ -68,9 +61,6 @@ function toData(view: QuestionnaireView): KuesionerData {
  *   GET    /me/questionnaire                 → jawaban + data murid (sekaligus menandai tahap dimulai)
  *   PUT    /me/questionnaire                 → simpan draf
  *   POST   /me/questionnaire/submit          → kirim final
- *   POST   /me/questionnaire/attachments     → unggah dokumen (multipart, field "file")
- *   GET    /me/questionnaire/attachments/:id → lihat dokumen
- *   DELETE /me/questionnaire/attachments/:id → hapus dokumen
  *   GET    /majors                           → daftar jurusan + mapel wajib
  */
 @Injectable({ providedIn: 'root' })
@@ -92,20 +82,5 @@ export class KuesionerService {
 
   submit(answers: KuesionerAnswers): Observable<KuesionerData> {
     return this.http.post<QuestionnaireView>(`${this.base}/submit`, answers).pipe(map(toData));
-  }
-
-  uploadAttachment(file: File): Observable<Attachment> {
-    const body = new FormData();
-    body.append('file', file);
-    return this.http.post<Attachment>(`${this.base}/attachments`, body);
-  }
-
-  /** Ambil file sebagai blob (butuh token, jadi tidak bisa pakai link biasa). */
-  downloadAttachment(id: number): Observable<Blob> {
-    return this.http.get(`${this.base}/attachments/${id}`, { responseType: 'blob' });
-  }
-
-  removeAttachment(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/attachments/${id}`);
   }
 }

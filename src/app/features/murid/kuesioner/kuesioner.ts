@@ -10,18 +10,14 @@ import {
 import { RouterLink } from '@angular/router';
 import { forkJoin, startWith } from 'rxjs';
 
-import { problemMessage } from '../../../core/api/problems';
+import { problemMessage } from '../../../core/api/problem';
 import { Icon, IconName } from '../../../shared/icon/icon';
 import { MuridProgressService } from '../murid-progress.service';
 import {
-  ALLOWED_ATTACHMENT_TYPES,
-  Attachment,
   KuesionerAnswers,
   KuesionerData,
   KuesionerService,
   KuesionerStatus,
-  MAX_ATTACHMENTS,
-  MAX_ATTACHMENT_BYTES,
   MajorOption,
 } from './kuesioner.service';
 
@@ -56,12 +52,10 @@ export class Kuesioner {
 
   readonly steps: StepInfo[] = [
     { n: 1, label: 'Data diri', title: 'Data diri', subtitle: 'Diambil dari data sekolah (e-Rapor).', icon: 'user' },
-    { n: 2, label: 'Cita-cita', title: 'Cita-cita', subtitle: 'Ceritakan cita-cita dan hal yang mendukungnya.', icon: 'target' },
+    { n: 2, label: 'Cita-cita & minat', title: 'Cita-cita & minat', subtitle: 'Ceritakan cita-cita, kegiatan pendukung, dan minatmu.', icon: 'target' },
     { n: 3, label: 'Pilihan jurusan', title: 'Pilihan jurusan kuliah', subtitle: 'Pilih dua jurusan kuliah yang kamu minati.', icon: 'graduation' },
     { n: 4, label: 'Tinjau', title: 'Tinjau jawaban', subtitle: 'Periksa kembali sebelum dikirim.', icon: 'eye' },
   ];
-
-  readonly maxAttachments = MAX_ATTACHMENTS;
 
   // ----- state -----
   readonly step = signal<Step>(1);
@@ -69,14 +63,11 @@ export class Kuesioner {
   readonly loadError = signal<string | null>(null);
   readonly saving = signal(false);
   readonly submitting = signal(false);
-  readonly uploading = signal(false);
   readonly message = signal<{ type: 'success' | 'error'; text: string } | null>(null);
-  readonly uploadError = signal<string | null>(null);
 
   readonly status = signal<KuesionerStatus>('NOT_STARTED');
   readonly data = signal<KuesionerData | null>(null);
   readonly majors = signal<MajorOption[]>([]);
-  readonly attachments = signal<Attachment[]>([]);
 
   /** Terkunci kalau sudah dikirim, atau periode kuesioner sudah ditutup (ditentukan backend). */
   readonly readOnly = computed(() => !(this.data()?.editable ?? false));
@@ -87,6 +78,8 @@ export class Kuesioner {
   readonly aspirationForm = this.fb.group({
     aspiration: ['', [Validators.required, Validators.maxLength(100)]],
     supportingActivities: ['', [Validators.maxLength(1000)]],
+    interestIpa: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(5)]),
+    interestIps: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(5)]),
   });
 
   readonly majorForm = this.fb.group(
@@ -139,10 +132,11 @@ export class Kuesioner {
   private applyData(data: KuesionerData): void {
     this.data.set(data);
     this.status.set(data.status);
-    this.attachments.set(data.attachments);
     this.aspirationForm.patchValue({
       aspiration: data.aspiration,
       supportingActivities: data.supportingActivities,
+      interestIpa: data.interestIpa,
+      interestIps: data.interestIps,
     });
     this.majorForm.patchValue({ major1Id: data.major1Id, major2Id: data.major2Id });
 
@@ -267,93 +261,34 @@ export class Kuesioner {
   }
 
   private answers(): KuesionerAnswers {
-    const { aspiration, supportingActivities } = this.aspirationForm.getRawValue();
+    const { aspiration, supportingActivities, interestIpa, interestIps } = this.aspirationForm.getRawValue();
     const { major1Id, major2Id } = this.majorForm.getRawValue();
     return {
       aspiration: aspiration.trim(),
       supportingActivities: supportingActivities.trim(),
+      interestIpa,
+      interestIps,
       major1Id,
       major2Id,
     };
   }
 
-  // -----------------------------------------------------------------
-  // Dokumen penunjang
-  // -----------------------------------------------------------------
-  onFileInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.addFiles(Array.from(input.files ?? []));
-    input.value = ''; // supaya file yang sama bisa dipilih lagi
-  }
+  readonly interestQuestions = [
+    { key: 'interestIpa', title: 'Seberapa minat kamu dengan pelajaran IPA?', hint: 'Biologi, Fisika, Kimia, Matematika, Informatika' },
+    { key: 'interestIps', title: 'Seberapa minat kamu dengan pelajaran IPS?', hint: 'Sosiologi, Ekonomi, Geografi, Sejarah' },
+  ] as const;
 
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    if (!this.readOnly()) {
-      this.addFiles(Array.from(event.dataTransfer?.files ?? []));
-    }
-  }
+  /** Pilihan skala minat 1–5 */
+  readonly interestScale = [
+    { value: 1, label: 'Sangat tidak minat' },
+    { value: 2, label: 'Kurang minat' },
+    { value: 3, label: 'Biasa saja' },
+    { value: 4, label: 'Minat' },
+    { value: 5, label: 'Sangat minat' },
+  ];
 
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-  }
-
-  private addFiles(files: File[]): void {
-    this.uploadError.set(null);
-    const room = MAX_ATTACHMENTS - this.attachments().length;
-    if (files.length > room) {
-      this.uploadError.set(`Maksimal ${MAX_ATTACHMENTS} dokumen.`);
-      files = files.slice(0, Math.max(room, 0));
-    }
-
-    for (const file of files) {
-      if (!ALLOWED_ATTACHMENT_TYPES.includes(file.type)) {
-        this.uploadError.set(`${file.name}: hanya PDF, JPG, atau PNG.`);
-        continue;
-      }
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        this.uploadError.set(`${file.name}: ukuran maksimal 5 MB.`);
-        continue;
-      }
-      this.uploading.set(true);
-      this.service.uploadAttachment(file).subscribe({
-        next: (attachment) => {
-          this.attachments.update((list) => [...list, attachment]);
-          this.uploading.set(false);
-        },
-        error: (err: unknown) => {
-          this.uploading.set(false);
-          this.uploadError.set(problemMessage(err, `${file.name} gagal diunggah.`));
-        },
-      });
-    }
-  }
-
-  removeAttachment(attachment: Attachment): void {
-    this.service.removeAttachment(attachment.id).subscribe({
-      next: () => this.attachments.update((list) => list.filter((a) => a.id !== attachment.id)),
-      error: (err: unknown) => this.uploadError.set(problemMessage(err, 'Dokumen gagal dihapus.')),
-    });
-  }
-
-  /** Buka dokumen di tab baru (file diambil lewat API karena butuh token). */
-  openAttachment(attachment: Attachment): void {
-    // buka tab dulu (masih dalam klik user) supaya tidak diblokir popup blocker
-    const tab = window.open('', '_blank');
-    this.service.downloadAttachment(attachment.id).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        if (tab) {
-          tab.location.href = url;
-        } else {
-          window.open(url, '_blank');
-        }
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      },
-      error: (err: unknown) => {
-        tab?.close();
-        this.uploadError.set(problemMessage(err, 'Dokumen gagal dibuka.'));
-      },
-    });
+  interestLabel(value: number | null): string {
+    return this.interestScale.find((o) => o.value === value)?.label ?? '-';
   }
 
   // -----------------------------------------------------------------
@@ -361,10 +296,6 @@ export class Kuesioner {
   // -----------------------------------------------------------------
   isInvalid(control: AbstractControl): boolean {
     return control.invalid && control.touched;
-  }
-
-  formatSize(bytes: number): string {
-    return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
   }
 
   private scrollTop(): void {

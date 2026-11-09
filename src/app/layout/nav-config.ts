@@ -38,8 +38,8 @@ export const NAV: Record<Role, NavGroup[]> = {
         { label: 'Beranda', path: '', icon: 'grid', exact: true },
         { label: 'Kuesioner', path: 'kuesioner', icon: 'clipboard', stage: 'kuesioner' },
         { label: 'Pilih kelas', path: 'pilih-kelas', icon: 'layers', stage: 'pilih-kelas' },
-        { label: 'Surat pernyataan', path: 'surat', icon: 'file-pen', stage: 'surat' },
         { label: 'Kelas saya', path: 'kelas', icon: 'award', stage: 'kelas-final' },
+        { label: 'Surat pernyataan', path: 'surat', icon: 'file-pen', stage: 'surat' },
         { label: 'Pengumuman', path: 'pengumuman', icon: 'bell' },
       ],
     },
@@ -64,9 +64,9 @@ export const NAV: Record<Role, NavGroup[]> = {
     {
       label: 'Data sekolah',
       items: [
-        { label: 'Murid & guru', path: 'pengguna', icon: 'users' },
+        { label: 'Data murid', path: 'pengguna', icon: 'users' },
         { label: 'Mapel & jurusan', path: 'master', icon: 'database' },
-        { label: 'Upload nilai', path: 'upload', icon: 'upload' },
+        { label: 'Nilai & minat bakat', path: 'upload', icon: 'upload' },
       ],
     },
     HELP,

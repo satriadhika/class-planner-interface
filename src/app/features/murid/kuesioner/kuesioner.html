@@ -134,43 +134,27 @@
                 ></textarea>
                 <small class="hint">{{ supportingLength() }}/1000 karakter</small>
               </label>
+
+              @for (q of interestQuestions; track q.key) {
+                <fieldset class="field full scale" [attr.aria-invalid]="isInvalid(aspirationForm.get(q.key)!)">
+                  <legend>{{ q.title }}</legend>
+                  <small class="hint">{{ q.hint }}</small>
+                  <div class="scale-options">
+                    @for (o of interestScale; track o.value) {
+                      <label class="scale-option">
+                        <input type="radio" [formControlName]="q.key" [value]="o.value" />
+                        <span class="scale-num">{{ o.value }}</span>
+                        <span class="scale-label">{{ o.label }}</span>
+                      </label>
+                    }
+                  </div>
+                  @if (isInvalid(aspirationForm.get(q.key)!)) {
+                    <small class="field-error">Pilih salah satu</small>
+                  }
+                </fieldset>
+              }
             </div>
           </form>
-
-          <div class="field full">
-            <span class="field-label">Dokumen penunjang jurusan <em>(opsional)</em></span>
-            <p class="hint">Sertifikat, piagam, atau bukti kegiatan. PDF, JPG, atau PNG, maksimal 5 MB per file, {{ maxAttachments }} file.</p>
-
-            @if (attachments().length < maxAttachments && !readOnly()) {
-              <label class="dropzone" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple (change)="onFileInput($event)" />
-                <app-icon name="upload" [size]="24" />
-                <strong>{{ uploading() ? 'Mengunggah...' : 'Pilih file atau seret ke sini' }}</strong>
-                <small>{{ attachments().length }} dari {{ maxAttachments }} file</small>
-              </label>
-            }
-
-            @if (uploadError(); as uploadErr) {
-              <p class="field-error">{{ uploadErr }}</p>
-            }
-
-            @if (attachments().length) {
-              <ul class="files">
-                @for (file of attachments(); track file.id) {
-                  <li>
-                    <app-icon name="file" [size]="20" />
-                    <button type="button" class="file-name" (click)="openAttachment(file)">{{ file.fileName }}</button>
-                    <small>{{ formatSize(file.size) }}</small>
-                    @if (!readOnly()) {
-                      <button type="button" class="icon-btn" (click)="removeAttachment(file)" [attr.aria-label]="'Hapus ' + file.fileName">
-                        <app-icon name="trash" [size]="18" />
-                      </button>
-                    }
-                  </li>
-                }
-              </ul>
-            }
-          </div>
         }
 
         @case (3) {
@@ -268,18 +252,10 @@
                 <dd>{{ aspirationForm.controls.aspiration.value || '-' }}</dd>
                 <dt>Penunjang</dt>
                 <dd class="multiline">{{ aspirationForm.controls.supportingActivities.value || '-' }}</dd>
-                <dt>Dokumen</dt>
-                <dd>
-                  @if (attachments().length) {
-                    <ul class="file-names">
-                      @for (file of attachments(); track file.id) {
-                        <li><app-icon name="file" [size]="16" /> {{ file.fileName }}</li>
-                      }
-                    </ul>
-                  } @else {
-                    -
-                  }
-                </dd>
+                <dt>Minat IPA</dt>
+                <dd>{{ aspirationForm.controls.interestIpa.value ?? '-' }} · {{ interestLabel(aspirationForm.controls.interestIpa.value) }}</dd>
+                <dt>Minat IPS</dt>
+                <dd>{{ aspirationForm.controls.interestIps.value ?? '-' }} · {{ interestLabel(aspirationForm.controls.interestIps.value) }}</dd>
               </dl>
             </section>
 

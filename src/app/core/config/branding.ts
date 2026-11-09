@@ -1,7 +1,10 @@
-/** Identitas yang tampil di halaman depan & popup login. */
+/**
+ * Identitas tampilan aplikasi. Kalau project lu sudah punya file ini, PAKAI MILIK LU (jangan ditimpa).
+ * Logo diletakkan di src/assets/images/logo.png.
+ */
 export const BRANDING = {
-  logoUrl: '/assets/images/logo.png',
-  schoolName: 'SMA PGRI 3 Kota Bogor',
   appName: 'Class Planner',
-  tagline: 'Pemetaan Kelas & Mapel Pilihan',
+  schoolName: 'SMA Test',
+  tagline: 'Penjurusan kelas 11 yang terarah dan adil',
+  logoUrl: '/assets/images/logo.png',
 };

@@ -137,9 +137,6 @@
               @for (a of activities(); track a.id) {
                 <li>
                   <strong>{{ activityLabel(a.action) }}</strong>
-                  @if (a.detail && a.action.startsWith('ATTACHMENT')) {
-                    <span class="detail">{{ a.detail }}</span>
-                  }
                   <time [attr.datetime]="a.createdAt">{{ formatDateTime(a.createdAt) }}</time>
                 </li>
               }

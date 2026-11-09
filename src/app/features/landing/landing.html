@@ -1,25 +1,31 @@
 <div class="landing">
   <!-- ============ HEADER ============ -->
   <header class="topbar">
-    <div class="container topbar-inner">
+    <div class="topbar-inner">
       <a class="brand" routerLink="/">
-        <app-brand-mark [size]="36" />
+        <span class="brand-tile"><app-brand-mark [size]="40" /></span>
         <span class="brand-text">
           <strong>{{ branding.schoolName }}</strong>
-          <small>{{ branding.appName }}</small>
+          <small>{{ branding.appName }} · {{ branding.tagline }}</small>
         </span>
       </a>
 
       <nav class="nav" aria-label="Navigasi halaman">
-        <a href="#alur" (click)="scrollTo($event, 'alur')">Alur</a>
         <a href="#fitur" (click)="scrollTo($event, 'fitur')">Fitur</a>
+        <a href="#alur" (click)="scrollTo($event, 'alur')">Alur</a>
         <a href="#faq" (click)="scrollTo($event, 'faq')">FAQ</a>
       </nav>
 
       @if (user()) {
-        <a class="btn btn-primary" [routerLink]="dashboardPath()">Buka dashboard</a>
+        <a class="btn-portal" [routerLink]="dashboardPath()">
+          Buka Dashboard
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
       } @else {
-        <a class="btn btn-primary" routerLink="/login">Masuk</a>
+        <a class="btn-portal" routerLink="/login">
+          Masuk Portal
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
       }
     </div>
   </header>
@@ -27,125 +33,193 @@
   <main>
     <!-- ============ HERO ============ -->
     <section class="hero">
-      <div class="container hero-inner">
+      <div class="hero-bg" aria-hidden="true"></div>
+
+      <div class="hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow">Penjurusan kelas 11 · Kurikulum Merdeka</p>
-          <h1>Pilih kelas mapel pilihan yang <span class="accent">sesuai cita-citamu</span></h1>
-          <p class="lead">
-            Isi pilihan jurusan kuliah, lihat seberapa cocok setiap kelas denganmu,
-            lalu pilih kelas yang paling tepat. Semua dalam satu portal.
+          <p class="badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" fill="currentColor"/></svg>
+            Penjurusan Kelas 11 · Kurikulum Merdeka
           </p>
 
-          <div class="actions">
+          <h1>
+            <span class="h-strong">Petakan Kelas</span>
+            <span class="h-strong">Sesuai Pilihan</span>
+            <span class="h-serif">Masa Depan Murid</span>
+          </h1>
+
+          <p class="tagline">Dari pilihan jurusan kuliah ke kelas yang tepat</p>
+
+          <p class="lead">
+            Class Planner membantu waka kurikulum membentuk kelas mapel pilihan secara adil: murid mengisi pilihan jurusan,
+            sistem menyusun kelas, dan setiap murid melihat seberapa cocok kelasnya dengan cita-citanya.
+          </p>
+
+          <div class="hero-actions">
             @if (user()) {
-              <a class="btn btn-primary btn-lg" [routerLink]="dashboardPath()">Buka dashboard</a>
+              <a class="btn-primary" [routerLink]="dashboardPath()">
+                Buka Dashboard
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
             } @else {
-              <a class="btn btn-primary btn-lg" routerLink="/login">Masuk dengan akun sekolah</a>
+              <a class="btn-primary" routerLink="/login">
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Masuk Portal
+              </a>
             }
-            <a class="btn btn-secondary btn-lg" href="#alur" (click)="scrollTo($event, 'alur')">Lihat alur</a>
+            <a class="btn-ghost" href="#alur" (click)="scrollTo($event, 'alur')">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+              Lihat Alur
+            </a>
+            <a class="btn-ghost" href="#faq" (click)="scrollTo($event, 'faq')">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Pertanyaan Umum
+            </a>
           </div>
         </div>
 
-        <!-- Contoh kelas hasil pemetaan -->
-        <div class="preview" aria-hidden="true">
-          <div class="preview-head">
-            <div>
-              <span class="label">Kelas</span>
-              <strong class="class-name">XI-3</strong>
+        <!-- Ilustrasi produk: contoh kelas hasil pemetaan -->
+        <div class="hero-visual" aria-hidden="true">
+          <div class="mock-card">
+            <div class="mock-head">
+              <div>
+                <span class="mock-label">Kelas</span>
+                <strong class="mock-class">XI-3</strong>
+              </div>
+              <span class="chip chip-mixed">Campuran</span>
             </div>
-            <span class="tag">Campuran</span>
-          </div>
 
-          <ul class="subjects">
-            <li class="ipa">Biologi</li>
-            <li class="ipa">Kimia</li>
-            <li class="ipa">Matematika Lanjut</li>
-            <li class="ips">Ekonomi</li>
-            <li class="ips">Geografi</li>
-          </ul>
+            <ul class="mock-subjects">
+              <li class="ipa">Biologi</li>
+              <li class="ipa">Kimia</li>
+              <li class="ipa">Matematika Lanjut</li>
+              <li class="ips">Ekonomi</li>
+              <li class="ips">Geografi</li>
+            </ul>
 
-          <div class="match">
-            <div class="match-row">
+            <div class="mock-meter">
               <span>Kecocokan dengan pilihanmu</span>
               <strong>88%</strong>
             </div>
             <div class="bar"><i style="width: 88%"></i></div>
+
+            <div class="mock-foot">
+              <span>34 / 36 murid</span>
+              <span class="dot-ok">Kursi tersedia</span>
+            </div>
           </div>
 
-          <div class="preview-foot">
-            <span>34 / 36 murid</span>
-            <span class="ok">Kursi tersedia</span>
+          <div class="float float-top">
+            <span class="float-icon ok">✓</span>
+            <div>
+              <small>Pilihan 1</small>
+              <strong>Kedokteran</strong>
+            </div>
           </div>
+
+          <div class="float float-bottom">
+            <span class="float-icon lock">★</span>
+            <div>
+              <small>Status kelas</small>
+              <strong>Final disetujui waka</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FITUR ============ -->
+    <section id="fitur" class="section">
+      <div class="section-inner">
+        <p class="eyebrow">Fitur</p>
+        <h2>Semua tahap penjurusan dalam satu tempat</h2>
+
+        <div class="features">
+          <article class="feature">
+            <span class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2zM9 13l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Kuesioner jurusan</h3>
+            <p>Murid memilih dua jurusan kuliah impian. Waka bisa menambah pertanyaan sesuai kebutuhan tiap tahun.</p>
+          </article>
+
+          <article class="feature">
+            <span class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+            </span>
+            <h3>Kelas tersusun otomatis</h3>
+            <p>Sistem membentuk kelas berisi lima mapel pilihan, maksimal 36 murid, dengan mempertimbangkan ketersediaan guru.</p>
+          </article>
+
+          <article class="feature">
+            <span class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Persentase kecocokan</h3>
+            <p>Murid melihat kelas mana yang paling sesuai dengan pilihan jurusan dan kekuatan nilai rapornya.</p>
+          </article>
+
+          <article class="feature">
+            <span class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Review &amp; persetujuan</h3>
+            <p>Waka meninjau hasil, memindahkan murid bila perlu, lalu menyetujui kelas final yang tidak bisa diubah lagi.</p>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- ============ ALUR ============ -->
-    <section id="alur" class="section">
-      <div class="container">
-        <h2>Alurnya</h2>
-        <p class="section-lead">Lima langkah dari kuesioner sampai kelas final.</p>
+    <section id="alur" class="section section-tint">
+      <div class="section-inner">
+        <p class="eyebrow">Alur</p>
+        <h2>Lima langkah dari kuesioner sampai kelas final</h2>
 
         <ol class="steps">
           <li>
-            <span class="num">1</span>
-            <h3>Isi kuesioner</h3>
-            <p>Pilih jurusan kuliah 1 dan 2.</p>
+            <span class="step-no">1</span>
+            <div>
+              <h3>Isi kuesioner</h3>
+              <p>Masuk dengan akun Google sekolah, lalu pilih jurusan kuliah 1 dan 2.</p>
+            </div>
           </li>
           <li>
-            <span class="num">2</span>
-            <h3>Kelas disusun</h3>
-            <p>Sistem menyusun mapel pilihan untuk seluruh angkatan.</p>
+            <span class="step-no">2</span>
+            <div>
+              <h3>Sistem menyusun kelas</h3>
+              <p>Mapel pilihan disusun dari kebutuhan seluruh angkatan.</p>
+            </div>
           </li>
           <li>
-            <span class="num">3</span>
-            <h3>Pilih kelas</h3>
-            <p>Bandingkan persentase kecocokan setiap kelas.</p>
+            <span class="step-no">3</span>
+            <div>
+              <h3>Pilih kelas</h3>
+              <p>Bandingkan persentase kecocokan, lalu pilih kelas yang paling sesuai.</p>
+            </div>
           </li>
           <li>
-            <span class="num">4</span>
-            <h3>Surat pernyataan</h3>
-            <p>Tanda tangan digital orang tua, lalu unggah.</p>
+            <span class="step-no">4</span>
+            <div>
+              <h3>Surat pernyataan</h3>
+              <p>Tanda tangan digital oleh orang tua, lalu unggah kembali.</p>
+            </div>
           </li>
           <li>
-            <span class="num">5</span>
-            <h3>Kelas final</h3>
-            <p>Ditetapkan setelah pemerataan dan persetujuan waka.</p>
+            <span class="step-no">5</span>
+            <div>
+              <h3>Kelas final</h3>
+              <p>Setelah pemerataan dan persetujuan waka, kelasmu ditetapkan.</p>
+            </div>
           </li>
         </ol>
       </div>
     </section>
 
-    <!-- ============ FITUR ============ -->
-    <section id="fitur" class="section section-subtle">
-      <div class="container">
-        <h2>Yang kamu dapat</h2>
-        <p class="section-lead">Transparan untuk murid, efisien untuk sekolah.</p>
-
-        <div class="features">
-          <div class="feature">
-            <h3>Persentase kecocokan</h3>
-            <p>Lihat kelas mana yang paling sesuai dengan jurusan pilihan dan nilai rapormu.</p>
-          </div>
-          <div class="feature">
-            <h3>Kelas yang merata</h3>
-            <p>Maksimal 36 murid per kelas, dengan lima mapel pilihan yang disusun dari kebutuhan angkatan.</p>
-          </div>
-          <div class="feature">
-            <h3>Pilihan cadangan</h3>
-            <p>Pilihan jurusan kedua tetap diperhitungkan kalau pilihan pertama tidak tersedia.</p>
-          </div>
-          <div class="feature">
-            <h3>Tanpa kertas</h3>
-            <p>Kuesioner, pilihan kelas, dan surat pernyataan semuanya online.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ============ FAQ ============ -->
     <section id="faq" class="section">
-      <div class="container narrow">
+      <div class="section-inner narrow">
+        <p class="eyebrow">FAQ</p>
         <h2>Pertanyaan umum</h2>
 
         <div class="faq">
@@ -154,27 +228,40 @@
             <p>Akun Google, misalnya akun belajar.id. Saat pertama kali masuk, kamu diminta mengisi kode sekolah, NIS, dan tanggal lahir untuk mengaktifkan akun.</p>
           </details>
           <details>
-            <summary>Kode sekolah didapat dari mana?</summary>
-            <p>Dari waka kurikulum atau wali kelasmu.</p>
+            <summary>Apakah kelas yang saya pilih langsung final?</summary>
+            <p>Belum. Kelas dengan peminat lebih dari kapasitas akan diratakan oleh sistem, dengan tetap mengutamakan kecocokan dengan pilihan jurusanmu.</p>
           </details>
           <details>
-            <summary>Apakah kelas yang saya pilih langsung final?</summary>
-            <p>Belum. Kelas yang peminatnya lebih dari kapasitas akan diratakan, dengan tetap mengutamakan kecocokan dengan pilihan jurusanmu.</p>
+            <summary>Bagaimana persentase kecocokan dihitung?</summary>
+            <p>Dari jumlah mapel yang dibutuhkan jurusan pilihanmu yang ada di kelas tersebut, ditambah kekuatan nilai rapormu pada mapel-mapel kelas itu.</p>
           </details>
           <details>
             <summary>Bisakah saya mengganti pilihan kelas?</summary>
-            <p>Bisa, selama masa pemilihan kelas masih dibuka.</p>
+            <p>Bisa, selama masa pemilihan kelas masih dibuka. Surat pernyataan akan dibuat ulang sesuai pilihan terakhir.</p>
           </details>
         </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="cta">
+      <div class="cta-inner">
+        <div>
+          <h2>Siap memulai penjurusan?</h2>
+          <p>Masuk dengan akun Google sekolahmu untuk melihat tahapan yang sedang berjalan.</p>
+        </div>
+        @if (user()) {
+          <a class="btn-light" [routerLink]="dashboardPath()">Buka Dashboard</a>
+        } @else {
+          <a class="btn-light" routerLink="/login">Masuk Portal</a>
+        }
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <div class="container footer-inner">
-      <span>© {{ year }} {{ branding.schoolName }}</span>
-      <span>Didukung {{ branding.appName }}</span>
-    </div>
+    <span>© {{ year }} {{ branding.schoolName }}</span>
+    <span>Didukung {{ branding.appName }}</span>
   </footer>
 
   <!-- Popup login (route anak /login) -->

@@ -59,19 +59,19 @@ const STAGE_TEXT: Record<ApiStageKey, Omit<Stage, 'status' | 'startedAt' | 'comp
     cta: 'Pilih kelas',
     route: '/murid/pilih-kelas',
   },
-  SURAT: {
-    key: 'surat',
-    label: 'Surat pernyataan',
-    description: 'Unduh surat, minta tanda tangan digital orang tua, lalu unggah kembali.',
-    cta: 'Buka surat',
-    route: '/murid/surat',
-  },
   KELAS_FINAL: {
     key: 'kelas-final',
     label: 'Kelas final',
-    description: 'Kelasmu ditetapkan setelah pemerataan dan persetujuan waka.',
+    description: 'Kelasmu ditetapkan setelah pemerataan dan persetujuan waka kurikulum.',
     cta: 'Lihat kelas',
     route: '/murid/kelas',
+  },
+  SURAT: {
+    key: 'surat',
+    label: 'Surat pernyataan',
+    description: 'Surat pernyataan bisa diunduh setelah waka menyetujui kelasmu.',
+    cta: 'Unduh surat',
+    route: '/murid/surat',
   },
 };
 
@@ -79,8 +79,11 @@ const ACTIVITY_LABEL: Record<string, string> = {
   QUESTIONNAIRE_OPENED: 'Membuka kuesioner',
   QUESTIONNAIRE_DRAFT_SAVED: 'Menyimpan draf kuesioner',
   QUESTIONNAIRE_SUBMITTED: 'Mengirim kuesioner',
-  ATTACHMENT_UPLOADED: 'Mengunggah dokumen',
-  ATTACHMENT_DELETED: 'Menghapus dokumen',
+  CLASS_CHOSEN: 'Memilih kelas',
+  CLASS_CHANGED: 'Mengganti pilihan kelas',
+  PLACEMENT_REBALANCED: 'Ditempatkan lewat pemerataan',
+  PLACEMENT_MOVED: 'Dipindahkan oleh waka kurikulum',
+  CLASS_FINALIZED: 'Kelas final disetujui',
 };
 
 export function activityLabel(action: string): string {
