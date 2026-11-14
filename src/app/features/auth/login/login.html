@@ -6,7 +6,7 @@
   (click)="onDialogClick($event)"
 >
   <div class="panel">
-    <button type="button" class="close" (click)="close()" aria-label="Tutup">
+    <button type="button" class="close" (click)="close()" [attr.aria-label]="t().close">
       <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
 
@@ -15,14 +15,18 @@
     </div>
 
     @if (step() === 'signin') {
-      <p class="eyebrow">Akses aman tanpa password</p>
+      <p class="eyebrow">{{ t().signinEyebrow }}</p>
       <!-- autofocus: saat popup terbuka, fokus ke judul (bukan tombol tutup) -->
-      <h2 id="login-title" tabindex="-1" autofocus>Masuk ke Portal</h2>
-      <p class="desc">Gunakan akun Google yang terdaftar di {{ branding.schoolName }}, misalnya akun belajar.id.</p>
+      <h2 id="login-title" tabindex="-1" autofocus>{{ t().signinTitle }}</h2>
+      <p class="desc">{{ signinDesc() }}</p>
+    } @else if (step() === 'pending') {
+      <p class="eyebrow">{{ t().pendingEyebrow }}</p>
+      <h2 id="login-title" tabindex="-1">{{ t().pendingTitle }}</h2>
+      <p class="desc">{{ pendingText() }}</p>
     } @else {
-      <p class="eyebrow">Login pertama</p>
-      <h2 id="login-title" tabindex="-1">Aktifkan Akunmu</h2>
-      <p class="desc">Cocokkan akun Google ini dengan data muridmu di sekolah. Cukup sekali.</p>
+      <p class="eyebrow">{{ t().activateEyebrow }}</p>
+      <h2 id="login-title" tabindex="-1">{{ t().activateTitle }}</h2>
+      <p class="desc">{{ activateAs() === 'GURU' ? t().activateDescTeacher : t().activateDesc }}</p>
       @if (googleEmail()) {
         <p class="account-chip">
           <span class="dot" aria-hidden="true"></span>
@@ -35,7 +39,7 @@
     <div class="google-btn" #googleBtn [hidden]="step() !== 'signin'"></div>
 
     @if (loading()) {
-      <p class="status" aria-live="polite">Memproses...</p>
+      <p class="status" aria-live="polite">{{ t().processing }}</p>
     }
 
     @if (error()) {
@@ -43,64 +47,97 @@
     }
 
     @if (step() === 'signin') {
-      <div class="divider"><span>atau gunakan akun sekolah</span></div>
+      <div class="divider"><span>{{ t().divider }}</span></div>
 
       @if (!showPasswordForm()) {
         <button type="button" class="btn-alt" (click)="togglePasswordForm()">
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Pakai username &amp; password
+          {{ t().usePassword }}
         </button>
       } @else {
         <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()" novalidate>
           <label>
-            Kode sekolah
-            <input formControlName="schoolCode" autocomplete="organization" [attr.aria-invalid]="isInvalid('password', 'schoolCode')" />
+            {{ t().schoolCode }}
+            <input formControlName="schoolCode" autocomplete="organization" aria-describedby="school-code-note" />
+            <small class="field-note" id="school-code-note">{{ t().schoolCodeOptional }}</small>
           </label>
           <label>
-            Username
+            {{ t().username }}
             <input formControlName="username" autocomplete="username" [attr.aria-invalid]="isInvalid('password', 'username')" />
           </label>
           <label>
-            Password
+            {{ t().password }}
             <input type="password" formControlName="password" autocomplete="current-password" [attr.aria-invalid]="isInvalid('password', 'password')" />
           </label>
           <button type="submit" class="btn-submit" [disabled]="loading()">
-            {{ loading() ? 'Memproses...' : 'Masuk' }}
+            {{ loading() ? t().processing : t().signIn }}
           </button>
-          <button type="button" class="link" (click)="togglePasswordForm()">Kembali</button>
+          <button type="button" class="link" (click)="togglePasswordForm()">{{ t().back }}</button>
         </form>
       }
+    } @else if (step() === 'pending') {
+      <button type="button" class="btn-submit" (click)="backToSignIn()">{{ t().pendingBack }}</button>
     } @else {
+      <div class="role-switch" role="radiogroup" [attr.aria-label]="t().iAm">
+        <span>{{ t().iAm }}</span>
+        <button type="button" role="radio" [attr.aria-checked]="activateAs() === 'MURID'" (click)="activateAs.set('MURID'); error.set(null)">{{ t().asStudent }}</button>
+        <button type="button" role="radio" [attr.aria-checked]="activateAs() === 'GURU'" (click)="activateAs.set('GURU'); error.set(null)">{{ t().asTeacher }}</button>
+      </div>
+
+      @if (activateAs() === 'GURU') {
+        <form [formGroup]="teacherForm" (ngSubmit)="submitTeacher()" novalidate>
+          <label>
+            {{ t().schoolCode }}
+            <input formControlName="schoolCode" autocomplete="off" [placeholder]="t().schoolCodeHint" [attr.aria-invalid]="isInvalid('teacher', 'schoolCode')" />
+            @if (isInvalid('teacher', 'schoolCode')) {
+              <small class="field-error">{{ t().schoolCode }} {{ t().required }}</small>
+            }
+          </label>
+          <label>
+            {{ t().teacherCode }}
+            <input formControlName="teacherCode" autocomplete="off" [placeholder]="t().teacherCodeHint" [attr.aria-invalid]="isInvalid('teacher', 'teacherCode')" />
+            @if (isInvalid('teacher', 'teacherCode')) {
+              <small class="field-error">{{ t().teacherCode }} {{ t().required }}</small>
+            }
+          </label>
+          <button type="submit" class="btn-submit" [disabled]="loading()">
+            {{ loading() ? t().processing : t().register }}
+          </button>
+          <button type="button" class="link" (click)="backToSignIn()">{{ t().otherGoogle }}</button>
+        </form>
+      } @else {
       <form [formGroup]="activationForm" (ngSubmit)="submitActivation()" novalidate>
         <label>
-          Kode sekolah
-          <input formControlName="schoolCode" autocomplete="off" placeholder="Didapat dari waka sekolah" [attr.aria-invalid]="isInvalid('activation', 'schoolCode')" />
+          {{ t().schoolCode }}
+          <input formControlName="schoolCode" autocomplete="off" [placeholder]="t().schoolCodeHint" [attr.aria-invalid]="isInvalid('activation', 'schoolCode')" />
           @if (isInvalid('activation', 'schoolCode')) {
-            <small class="field-error">Kode sekolah wajib diisi</small>
+            <small class="field-error">{{ t().schoolCode }} {{ t().required }}</small>
           }
         </label>
         <label>
-          NIS
+          {{ t().studentNumber }}
           <input formControlName="studentNumber" inputmode="numeric" autocomplete="off" [attr.aria-invalid]="isInvalid('activation', 'studentNumber')" />
           @if (isInvalid('activation', 'studentNumber')) {
-            <small class="field-error">NIS wajib diisi</small>
+            <small class="field-error">{{ t().studentNumber }} {{ t().required }}</small>
           }
         </label>
         <label>
-          Tanggal lahir
+          {{ t().birthDate }}
           <input type="date" formControlName="birthDate" [max]="today" [attr.aria-invalid]="isInvalid('activation', 'birthDate')" />
           @if (isInvalid('activation', 'birthDate')) {
-            <small class="field-error">Tanggal lahir wajib diisi</small>
+            <small class="field-error">{{ t().birthDate }} {{ t().required }}</small>
           }
         </label>
 
         <button type="submit" class="btn-submit" [disabled]="loading()">
-          {{ loading() ? 'Memproses...' : 'Aktifkan & Masuk' }}
+          {{ loading() ? t().processing : t().activate }}
         </button>
-        <button type="button" class="link" (click)="backToSignIn()">Gunakan akun Google lain</button>
+        <button type="button" class="link" (click)="backToSignIn()">{{ t().otherGoogle }}</button>
       </form>
+      }
     }
 
-    <p class="help">Belum bisa masuk? <strong>Hubungi waka kurikulum sekolahmu.</strong></p>
+    <p class="help">{{ t().helpLead }} <strong>{{ t().helpStrong }}</strong></p>
+    <div class="lang-row"><app-lang-switch /></div>
   </div>
 </dialog>

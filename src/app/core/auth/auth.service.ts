@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { CurrentUser, LoginResponse, ROLE_HOME, Role } from './auth.models';
+import { CurrentUser, LoginResponse, ROLE_HOME, Role, TeacherRegisterResponse } from './auth.models';
 
 const TOKEN_KEY = 'cp.token';
 const USER_KEY = 'cp.user';
@@ -56,6 +56,25 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/auth/google/register`, request)
       .pipe(tap((res) => this.storeSession(res)));
+  }
+
+  /** Pendaftaran guru: kode sekolah + NIP/kode guru. Tidak langsung login (menunggu persetujuan waka). */
+  registerTeacher(request: { idToken: string; schoolCode: string; teacherCode: string }): Observable<TeacherRegisterResponse> {
+    return this.http.post<TeacherRegisterResponse>(`${environment.apiUrl}/auth/google/register-teacher`, request);
+  }
+
+  /** Ambil ulang data user (misalnya menu waka yang baru diubah super admin). */
+  refreshUser(): Observable<CurrentUser> {
+    return this.http.get<CurrentUser>(`${environment.apiUrl}/auth/me`).pipe(
+      tap((user) => {
+        try {
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
+        } catch {
+          // abaikan
+        }
+        this.currentUser.set(user);
+      }),
+    );
   }
 
   loginWithPassword(schoolCode: string, username: string, password: string): Observable<LoginResponse> {

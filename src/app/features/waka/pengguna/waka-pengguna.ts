@@ -2,9 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 
-import { problemMessage } from '../../../core/api/problem';
+import { problemMessage, translateMessage } from '../../../core/api/problem';
+import { I18n } from '../../../core/i18n/i18n';
 import { fmtDate } from '../../../shared/labels/labels';
 import { ImportResult, StudentRow, WakaApi } from '../waka-api';
+import { PENGGUNA_TEXT } from './waka-pengguna.i18n';
 
 /** Data murid: daftar, tambah/ubah/hapus, impor dari Excel. */
 @Component({
@@ -14,8 +16,8 @@ import { ImportResult, StudentRow, WakaApi } from '../waka-api';
     <div class="cp-page">
       <header class="cp-head">
         <div>
-          <h1>Data murid</h1>
-          <p>Murid masuk dengan NIS dan tanggal lahir. Data bisa diisi satu per satu atau diimpor dari file Excel (format leger e-Rapor juga bisa).</p>
+          <h1>{{ t().title }}</h1>
+          <p>{{ t().intro }}</p>
         </div>
       </header>
 
@@ -26,71 +28,70 @@ import { ImportResult, StudentRow, WakaApi } from '../waka-api';
       <div class="cp-grid two">
         <!-- ===================== form ===================== -->
         <section class="cp-card">
-          <h2>{{ editId() ? 'Ubah murid' : 'Tambah murid' }}</h2>
+          <h2>{{ editId() ? t().editStudent : t().addStudent }}</h2>
           <form class="cp-form" [formGroup]="form" (ngSubmit)="save()">
             <div class="cp-grid cols2">
               <label class="cp-field">
-                <span>NIS</span>
+                <span>{{ t().nis }}</span>
                 <input formControlName="studentNumber" inputmode="numeric" [readonly]="!!editId()" />
               </label>
               <label class="cp-field">
-                <span>NISN (opsional)</span>
+                <span>{{ t().nisn }}</span>
                 <input formControlName="nisn" inputmode="numeric" />
               </label>
             </div>
             <label class="cp-field">
-              <span>Nama lengkap</span>
+              <span>{{ t().fullName }}</span>
               <input formControlName="fullName" />
             </label>
             <div class="cp-grid cols3">
               <label class="cp-field">
-                <span>Tanggal lahir</span>
+                <span>{{ t().birthDate }}</span>
                 <input type="date" formControlName="birthDate" />
               </label>
               <label class="cp-field">
-                <span>Angkatan</span>
+                <span>{{ t().entryYear }}</span>
                 <input type="number" formControlName="entryYear" />
               </label>
               <label class="cp-field">
-                <span>Kelas sekarang</span>
+                <span>{{ t().currentClass }}</span>
                 <input formControlName="classLabel" placeholder="X-1" />
               </label>
             </div>
             <div class="cp-row">
-              <button class="cp-btn cp-btn--primary" type="submit" [disabled]="busy() || form.invalid">Simpan</button>
-              @if (editId()) { <button class="cp-btn" type="button" (click)="reset()">Batal</button> }
+              <button class="cp-btn cp-btn--primary" type="submit" [disabled]="busy() || form.invalid">{{ t().save }}</button>
+              @if (editId()) { <button class="cp-btn" type="button" (click)="reset()">{{ t().cancel }}</button> }
             </div>
           </form>
         </section>
 
         <!-- ===================== impor ===================== -->
         <section class="cp-card">
-          <h2>Impor dari Excel</h2>
-          <p class="cp-sub">File .xlsx dengan kolom <strong>NIS</strong> dan <strong>NAMA SISWA</strong>. Kolom NISN, TANGGAL LAHIR, KELAS, dan ANGKATAN dipakai kalau ada.
-            Kalau tidak ada kolom KELAS, nama sheet dipakai sebagai kelas. NIS yang sudah ada akan diperbarui.</p>
+          <h2>{{ t().importTitle }}</h2>
+          <p class="cp-sub">{{ t().importHintA }} <strong>NIS</strong> {{ t().and }} <strong>NAMA SISWA</strong>. {{ t().importHintB }}</p>
           <div class="cp-form">
             <label class="cp-field">
-              <span>Angkatan (kalau tidak ada di file)</span>
+              <span>{{ t().importYear }}</span>
               <input type="number" [value]="importYear() ?? ''" (input)="importYear.set(numOrNull($any($event.target).value))" />
             </label>
             <label class="cp-field">
-              <span>File</span>
+              <span>{{ t().file }}</span>
               <input type="file" accept=".xlsx,.xls" (change)="pick($event)" />
             </label>
             <div class="cp-row">
               <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy() || !file()" (click)="importFile()">
-                {{ busy() ? 'Mengimpor…' : 'Impor' }}
+                {{ busy() ? t().importing : t().import }}
               </button>
             </div>
           </div>
           @if (result(); as r) {
             <div class="cp-stats result">
-              <div class="cp-stat"><strong>{{ r.created }}</strong><span>baru</span></div>
-              <div class="cp-stat"><strong>{{ r.updated }}</strong><span>diperbarui</span></div>
-              <div class="cp-stat"><strong>{{ r.skipped }}</strong><span>dilewati</span></div>
+              <div class="cp-stat"><strong>{{ r.created }}</strong><span>{{ t().created }}</span></div>
+              <div class="cp-stat"><strong>{{ r.updated }}</strong><span>{{ t().updated }}</span></div>
+              <div class="cp-stat"><strong>{{ r.skipped }}</strong><span>{{ t().skipped }}</span></div>
             </div>
             @if (r.messages.length) {
-              <ul class="msgs cp-small">@for (m of r.messages; track $index) { <li>{{ m }}</li> }</ul>
+              <ul class="msgs cp-small">@for (m of r.messages; track $index) { <li>{{ tr(m) }}</li> }</ul>
             }
           }
         </section>
@@ -99,17 +100,17 @@ import { ImportResult, StudentRow, WakaApi } from '../waka-api';
       <!-- ===================== daftar ===================== -->
       <section class="cp-card">
         <div class="cp-row">
-          <h2>Daftar murid ({{ filtered().length }})</h2>
+          <h2>{{ t().listTitle.replace('{n}', '' + filtered().length) }}</h2>
           <span class="cp-spacer"></span>
-          <select (change)="year.set(numOrNull($any($event.target).value))" aria-label="Filter angkatan">
-            <option value="" [selected]="year() === null">Semua angkatan</option>
-            @for (y of years(); track y) { <option [value]="y" [selected]="year() === y">Angkatan {{ y }}</option> }
+          <select (change)="year.set(numOrNull($any($event.target).value))" [attr.aria-label]="t().filterYear">
+            <option value="" [selected]="year() === null">{{ t().allYears }}</option>
+            @for (y of years(); track y) { <option [value]="y" [selected]="year() === y">{{ t().yearOption.replace('{y}', '' + y) }}</option> }
           </select>
-          <input class="search" type="search" placeholder="Cari nama atau NIS" [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Cari murid" />
+          <input class="search" type="search" [placeholder]="t().search" [value]="query()" (input)="query.set($any($event.target).value)" [attr.aria-label]="t().searchAria" />
         </div>
         <div class="cp-table-wrap">
           <table class="cp-table">
-            <thead><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Angkatan</th><th>Tgl lahir</th><th>Akun</th><th></th></tr></thead>
+            <thead><tr><th>{{ t().nis }}</th><th>{{ t().colName }}</th><th>{{ t().colClass }}</th><th>{{ t().colYear }}</th><th>{{ t().colBirth }}</th><th>{{ t().colAccount }}</th><th></th></tr></thead>
             <tbody>
               @for (s of filtered(); track s.id) {
                 <tr>
@@ -118,20 +119,20 @@ import { ImportResult, StudentRow, WakaApi } from '../waka-api';
                   <td>{{ s.classLabel ?? '-' }}</td>
                   <td>{{ s.entryYear }}</td>
                   <td>{{ date(s.birthDate) }}</td>
-                  <td><span class="cp-badge" [class.cp-badge--ok]="s.activated">{{ s.activated ? 'Aktif' : 'Belum aktivasi' }}</span></td>
+                  <td><span class="cp-badge" [class.cp-badge--ok]="s.activated">{{ s.activated ? t().active : t().notActivated }}</span></td>
                   <td class="end">
                     @if (confirmDelete() === s.id) {
-                      <span class="cp-small">Hapus?</span>
-                      <button class="cp-btn cp-btn--sm cp-btn--danger" type="button" (click)="remove(s)">Ya</button>
-                      <button class="cp-btn cp-btn--sm" type="button" (click)="confirmDelete.set(null)">Tidak</button>
+                      <span class="cp-small">{{ t().deleteQ }}</span>
+                      <button class="cp-btn cp-btn--sm cp-btn--danger" type="button" (click)="remove(s)">{{ t().yes }}</button>
+                      <button class="cp-btn cp-btn--sm" type="button" (click)="confirmDelete.set(null)">{{ t().no }}</button>
                     } @else {
-                      <button class="cp-btn cp-btn--sm cp-btn--ghost" type="button" (click)="edit(s)">Ubah</button>
-                      <button class="cp-btn cp-btn--sm cp-btn--ghost" type="button" (click)="confirmDelete.set(s.id)">Hapus</button>
+                      <button class="cp-btn cp-btn--sm cp-btn--ghost" type="button" (click)="edit(s)">{{ t().edit }}</button>
+                      <button class="cp-btn cp-btn--sm cp-btn--ghost" type="button" (click)="confirmDelete.set(s.id)">{{ t().remove }}</button>
                     }
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="7" class="cp-empty">Belum ada murid.</td></tr>
+                <tr><td colspan="7" class="cp-empty">{{ t().empty }}</td></tr>
               }
             </tbody>
           </table>
@@ -153,6 +154,9 @@ import { ImportResult, StudentRow, WakaApi } from '../waka-api';
 export class WakaPengguna {
   private readonly api = inject(WakaApi);
   private readonly fb = inject(FormBuilder);
+  private readonly i18n = inject(I18n);
+  /** Teks sesuai bahasa aktif. */
+  readonly t = computed(() => PENGGUNA_TEXT[this.i18n.lang()]);
 
   readonly students = signal<StudentRow[]>([]);
   readonly year = signal<number | null>(null);
@@ -220,7 +224,7 @@ export class WakaPengguna {
       classLabel: v.classLabel.trim() || null,
     };
     this.call(this.api.saveStudent(body, this.editId() ?? undefined), () => {
-      this.message.set({ text: 'Data murid disimpan.', error: false });
+      this.message.set({ text: this.t().saved, error: false });
       this.reset();
       this.load();
     });
@@ -228,7 +232,7 @@ export class WakaPengguna {
 
   remove(s: StudentRow): void {
     this.call(this.api.deleteStudent(s.id), () => {
-      this.message.set({ text: `${s.fullName} dihapus.`, error: false });
+      this.message.set({ text: this.t().deleted.replace('{name}', s.fullName), error: false });
       this.load();
     });
   }
@@ -244,7 +248,7 @@ export class WakaPengguna {
     this.result.set(null);
     this.call(this.api.importStudents(f, this.importYear()), (r) => {
       this.result.set(r);
-      this.message.set({ text: 'Impor selesai.', error: false });
+      this.message.set({ text: this.t().imported, error: false });
       this.load();
     });
   }
@@ -254,7 +258,14 @@ export class WakaPengguna {
   }
 
   date(iso: string): string {
+    this.i18n.lang();
     return fmtDate(iso);
+  }
+
+  /** Pesan hasil impor dari backend, diterjemahkan sesuai bahasa. */
+  tr(message: string): string {
+    this.i18n.lang();
+    return translateMessage(message);
   }
 
   private call<T>(req: Observable<T>, done: (v: T) => void): void {

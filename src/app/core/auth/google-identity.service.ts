@@ -48,7 +48,7 @@ export class GoogleIdentityService {
   }
 
   /** Menampilkan tombol "Login dengan Google". `onIdToken` dipanggil dengan ID token dari Google. */
-  async renderButton(container: HTMLElement, onIdToken: (idToken: string) => void): Promise<void> {
+  async renderButton(container: HTMLElement, onIdToken: (idToken: string) => void, locale = 'id'): Promise<void> {
     await this.load();
     const gsi = window.google!.accounts.id;
     gsi.initialize({
@@ -61,6 +61,7 @@ export class GoogleIdentityService {
       shape: 'pill',
       text: 'signin_with',
       width: 280,
+      locale, // bahasa teks tombol Google, mengikuti pilihan bahasa aplikasi
     });
   }
 

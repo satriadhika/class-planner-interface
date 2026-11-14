@@ -1,147 +1,147 @@
-<div class="page">
-  @if (error(); as message) {
-    <section class="card state-card error" role="alert">
-      <app-icon name="info" [size]="22" />
-      <div>
-        <strong>{{ message }}</strong>
-        <button type="button" class="link-btn" (click)="reload()">Coba lagi</button>
+<div class="cp-page">
+  <app-hero [name]="fullName()" [subtitle]="cycle()?.name ?? t().defaultCycle">
+    @if (loaded() && !noCycle()) {
+      <div class="summary">
+        <span class="summary-label">{{ t().progress }}</span>
+        <strong>{{ doneCount() }}<small> / {{ stages().length }} {{ t().steps }}</small></strong>
+        <span class="summary-bar"><i [style.width.%]="percent()"></i></span>
       </div>
-    </section>
-  } @else if (!loaded()) {
-    <!-- kerangka saat memuat -->
-    <section class="card skeleton" aria-busy="true" aria-label="Memuat progres">
-      <i></i><i></i><i class="short"></i>
-    </section>
-  } @else if (noCycle()) {
-    <section class="card state-card">
-      <app-icon name="clock" [size]="22" />
-      <div>
-        <strong>Periode penjurusan belum dibuka</strong>
-        <p>Waka kurikulum akan membuka kuesioner untuk angkatanmu. Cek halaman ini lagi nanti.</p>
-      </div>
-    </section>
-  } @else {
-    <!-- Langkah berikutnya -->
-    @if (current(); as step) {
-      <section class="card next-step">
-        <div>
-          <p class="eyebrow">Langkah berikutnya</p>
-          <h2>{{ step.label }}</h2>
-          <p>{{ step.description }}</p>
-        </div>
-        <a class="btn-primary" [routerLink]="step.route">
-          {{ step.cta }}
-          <app-icon name="arrow-right" [size]="18" />
-        </a>
-      </section>
     }
+  </app-hero>
 
-    <!-- Info tenggat -->
-    @if (deadline(); as d) {
-      <section class="card notice">
-        <span class="notice-icon"><app-icon name="clock" [size]="24" /></span>
-        <div class="notice-body">
-          <h3>{{ d.title }}</h3>
-          <p>
-            @if (d.kind === 'survey') {
-              Jawaban bisa disimpan sebagai draf dan diubah sampai kamu menekan tombol kirim.
-            } @else {
-              Kamu masih bisa mengganti pilihan selama masa pemilihan dibuka. Hasil akhir ditetapkan setelah
-              pemerataan kelas dan persetujuan waka kurikulum.
-            }
-          </p>
-          <small>{{ cycle()?.name }}</small>
-        </div>
-      </section>
-    }
-  }
-
-  <!-- Banner -->
-  <section class="banner">
-    <div class="banner-text">
-      <p class="banner-eyebrow">Portal penjurusan</p>
-      <h2>Pantau setiap tahap dengan tenang.</h2>
-      <p>Kuesioner, pilihan kelas, surat pernyataan, dan hasil akhir ada di satu tempat.</p>
+  @if (error()) {
+    <div class="cp-alert cp-alert--error" role="alert">
+      <span>{{ t().loadError }}</span>
+      <button type="button" class="cp-btn cp-btn--sm" (click)="reload()">{{ t().retry }}</button>
     </div>
-    <a class="btn-light" routerLink="/murid/panduan">
-      <app-icon name="book" [size]="18" />
-      Baca panduan
-    </a>
-  </section>
-
-  @if (loaded() && !noCycle()) {
-    <div class="lower">
-      <!-- Progres -->
-      <section class="progress">
-        <div class="section-head">
-          <h2>Progres penjurusanmu</h2>
-          <p>{{ doneCount() }} dari {{ stages().length }} tahap selesai</p>
+  } @else if (!loaded()) {
+    <div class="cp-bento" aria-busy="true" [attr.aria-label]="t().loading">
+      <div class="cp-widget span-7 skeleton"></div>
+      <div class="cp-widget span-5 skeleton"></div>
+    </div>
+  } @else if (noCycle()) {
+    <div class="cp-empty">
+      <strong>{{ t().noCycleTitle }}</strong><br />
+      {{ t().noCycleText }}
+    </div>
+  } @else {
+    <div class="cp-bento">
+      <!-- ============ Langkah berikutnya ============ -->
+      <section class="cp-widget span-7">
+        <div class="cp-widget__head"><h2>{{ t().nextStep }}</h2></div>
+        <div class="cp-widget__section cp-widget__section--grow">
+          @if (current(); as step) {
+            <div class="next">
+              <div class="cp-ring" [style.--p]="percent()">
+                <div><strong>{{ percent() }}%</strong><span>{{ t().done }}</span></div>
+              </div>
+              <div class="next-text">
+                <h3>{{ step.label }}</h3>
+                <p class="cp-muted">{{ step.description }}</p>
+                <a class="cp-btn cp-btn--primary" [routerLink]="step.route">
+                  {{ step.cta }} <app-icon name="arrow-right" [size]="16" />
+                </a>
+              </div>
+            </div>
+          } @else {
+            <p class="cp-ok"><app-icon name="check-circle" [size]="20" /> {{ t().allDone }}</p>
+          }
         </div>
+      </section>
 
-        <div class="card progress-card">
-          <div class="progress-top">
-            <span><strong>{{ percent() }}%</strong> selesai</span>
-          </div>
-          <div class="bar" role="progressbar" [attr.aria-valuenow]="percent()" aria-valuemin="0" aria-valuemax="100">
-            <i [style.width.%]="percent()"></i>
-          </div>
+      <!-- ============ Jadwal ============ -->
+      <section class="cp-widget span-5">
+        <div class="cp-widget__head"><h2>{{ t().schedule }}</h2></div>
+        <div class="cp-widget__section cp-widget__section--grow">
+          <ul class="dates">
+            <li>
+              <span class="date-icon"><app-icon name="clipboard" [size]="18" /></span>
+              <div>
+                <strong>{{ t().surveyClose }}</strong>
+                <span class="cp-small cp-muted">{{ dateTime(cycle()?.surveyCloseAt) ?? t().notSet }}</span>
+              </div>
+              @if (daysLeft(cycle()?.surveyCloseAt); as d) { <span class="cp-badge" [class.cp-badge--warn]="d.soon">{{ d.text }}</span> }
+            </li>
+            <li>
+              <span class="date-icon"><app-icon name="layers" [size]="18" /></span>
+              <div>
+                <strong>{{ t().selectionClose }}</strong>
+                <span class="cp-small cp-muted">{{ dateTime(cycle()?.selectionCloseAt) ?? t().notSet }}</span>
+              </div>
+              @if (daysLeft(cycle()?.selectionCloseAt); as d) { <span class="cp-badge" [class.cp-badge--warn]="d.soon">{{ d.text }}</span> }
+            </li>
+          </ul>
+        </div>
+      </section>
 
-          <ol class="stages">
+      <!-- ============ Tahap ============ -->
+      <section class="cp-widget span-12">
+        <div class="cp-widget__head">
+          <h2>{{ t().stepsTitle }}</h2>
+          <a class="cp-more" routerLink="/murid/kelas">{{ t().myClass }} <app-icon name="chevron-right" [size]="16" /></a>
+        </div>
+        <div class="cp-widget__section">
+          <ol class="cp-steps">
             @for (stage of stages(); track stage.key; let i = $index) {
               <li [class]="stage.status">
-                <span class="stage-icon">
+                <span class="cp-steps__dot">
                   @switch (stage.status) {
-                    @case ('done') {
-                      <app-icon name="check" [size]="16" />
-                    }
-                    @case ('current') {
-                      {{ i + 1 }}
-                    }
-                    @case ('missed') {
-                      <app-icon name="x" [size]="14" />
-                    }
-                    @default {
-                      <app-icon name="lock" [size]="14" />
-                    }
+                    @case ('done') { <app-icon name="check" [size]="18" /> }
+                    @case ('locked') { <app-icon name="lock" [size]="15" /> }
+                    @case ('missed') { <app-icon name="x" [size]="16" /> }
+                    @default { {{ i + 1 }} }
                   }
                 </span>
-                <div class="stage-text">
-                  <strong>{{ stage.label }}</strong>
-                  <small>
-                    {{ statusLabel[stage.status] }}
+                <div class="step-text">
+                  <a [routerLink]="stage.route"><strong>{{ stage.label }}</strong></a>
+                  <span class="cp-small">
                     @if (stage.status === 'done' && stage.completedAt) {
-                      · {{ formatDateTime(stage.completedAt) }}
+                      {{ dateTime(stage.completedAt) }}
+                    } @else {
+                      {{ t().status[stage.status] }}
                     }
-                  </small>
+                  </span>
                 </div>
-                @if (stage.status === 'done' || stage.status === 'current') {
-                  <a class="stage-link" [routerLink]="stage.route">Buka</a>
-                }
               </li>
             }
           </ol>
         </div>
       </section>
 
-      <!-- Riwayat aktivitas -->
-      <section class="history">
-        <div class="section-head">
-          <h2>Aktivitas terakhir</h2>
-          <p>Tercatat otomatis oleh sistem</p>
-        </div>
-        <div class="card">
+      <!-- ============ Aktivitas ============ -->
+      <section class="cp-widget span-7">
+        <div class="cp-widget__head"><h2>{{ t().activityTitle }}</h2></div>
+        <div class="cp-widget__section cp-widget__section--grow">
           @if (activities().length === 0) {
-            <p class="empty">Belum ada aktivitas.</p>
+            <p class="cp-muted cp-small">{{ t().noActivity }}</p>
           } @else {
             <ul class="timeline">
               @for (a of activities(); track a.id) {
                 <li>
-                  <strong>{{ activityLabel(a.action) }}</strong>
-                  <time [attr.datetime]="a.createdAt">{{ formatDateTime(a.createdAt) }}</time>
+                  <strong>{{ t().activity[a.action] ?? a.action }}</strong>
+                  <time class="cp-small cp-muted" [attr.datetime]="a.createdAt">{{ dateTime(a.createdAt) }}</time>
                 </li>
               }
             </ul>
           }
+        </div>
+      </section>
+
+      <!-- ============ Menu cepat ============ -->
+      <section class="cp-widget span-5">
+        <div class="cp-widget__head"><h2>{{ t().quickMenu }}</h2></div>
+        <div class="cp-widget__section">
+          <ul class="cp-shortcuts">
+            <li><a class="cp-shortcut" routerLink="/murid/kuesioner"><span><app-icon name="clipboard" [size]="18" /></span><span>{{ t().stages.kuesioner.label }}</span><app-icon name="chevron-right" [size]="16" /></a></li>
+            <li><a class="cp-shortcut" routerLink="/murid/pilih-kelas"><span><app-icon name="layers" [size]="18" /></span><span>{{ t().stages["pilih-kelas"].label }}</span><app-icon name="chevron-right" [size]="16" /></a></li>
+            <li><a class="cp-shortcut" routerLink="/murid/surat"><span><app-icon name="file-pen" [size]="18" /></span><span>{{ t().stages.surat.label }}</span><app-icon name="chevron-right" [size]="16" /></a></li>
+          </ul>
+        </div>
+        <div class="cp-widget__section">
+          <p class="cp-small cp-muted help">
+            {{ t().helpBefore }}
+            <a routerLink="/murid/panduan">{{ t().helpLink }}</a>.
+          </p>
         </div>
       </section>
     </div>

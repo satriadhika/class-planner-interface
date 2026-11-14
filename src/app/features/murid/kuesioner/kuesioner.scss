@@ -394,6 +394,17 @@ textarea {
   font-weight: 600;
 }
 
+/* mapel wajib jurusan */
+.chip.core {
+  background: var(--primary);
+  color: #fff;
+}
+
+.chip small {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 /* --- kotak info --- */
 .note {
   display: flex;

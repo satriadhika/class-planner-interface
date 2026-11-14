@@ -1,267 +1,273 @@
 <div class="landing">
-  <!-- ============ HEADER ============ -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" routerLink="/">
-        <span class="brand-tile"><app-brand-mark [size]="40" /></span>
-        <span class="brand-text">
-          <strong>{{ branding.schoolName }}</strong>
-          <small>{{ branding.appName }} · {{ branding.tagline }}</small>
-        </span>
-      </a>
-
-      <nav class="nav" aria-label="Navigasi halaman">
-        <a href="#fitur" (click)="scrollTo($event, 'fitur')">Fitur</a>
-        <a href="#alur" (click)="scrollTo($event, 'alur')">Alur</a>
-        <a href="#faq" (click)="scrollTo($event, 'faq')">FAQ</a>
+  <!-- ============ NAVIGASI: logo di tengah ============ -->
+  <header class="nav" [class.solid]="scrolled()">
+    <div class="nav-inner">
+      <nav class="nav-side left" [attr.aria-label]="t().nav.menu">
+        <a href="#tentang" (click)="scrollTo($event, 'tentang')">{{ t().nav.about }}</a>
+        <a href="#rumpun" (click)="scrollTo($event, 'rumpun')">{{ t().nav.majors }}</a>
       </nav>
 
-      @if (user()) {
-        <a class="btn-portal" [routerLink]="dashboardPath()">
-          Buka Dashboard
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      } @else {
-        <a class="btn-portal" routerLink="/login">
-          Masuk Portal
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      }
+      <a class="brand" routerLink="/" [attr.aria-label]="branding.schoolName + ' — ' + t().nav.home">
+        <app-brand-mark [size]="46" [alt]="'Logo ' + branding.schoolName" />
+        <span>{{ branding.schoolName }}</span>
+      </a>
+
+      <nav class="nav-side right" [attr.aria-label]="t().nav.menu">
+        <a href="#jadwal" (click)="scrollTo($event, 'jadwal')">{{ t().nav.steps }}</a>
+        <a href="#faq" (click)="scrollTo($event, 'faq')">{{ t().nav.faq }}</a>
+      </nav>
+
+      <div class="nav-cta">
+        <app-lang-switch [tone]="scrolled() ? 'light' : 'dark'" />
+        @if (user()) {
+          <a class="btn btn-gold btn-sm" [routerLink]="dashboardPath()">{{ t().nav.dashboard }}</a>
+        } @else {
+          <a class="btn btn-gold btn-sm" routerLink="/login">{{ t().nav.signIn }}</a>
+        }
+      </div>
+
+      <button type="button" class="nav-toggle" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" aria-controls="mobile-menu" [attr.aria-label]="t().nav.menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+      </button>
     </div>
+
+    @if (menuOpen()) {
+      <nav class="mobile-menu" id="mobile-menu" [attr.aria-label]="t().nav.menu">
+        <a href="#tentang" (click)="scrollTo($event, 'tentang')">{{ t().nav.about }}</a>
+        <a href="#rumpun" (click)="scrollTo($event, 'rumpun')">{{ t().nav.majors }}</a>
+        <a href="#jadwal" (click)="scrollTo($event, 'jadwal')">{{ t().nav.steps }}</a>
+        <a href="#faq" (click)="scrollTo($event, 'faq')">{{ t().nav.faq }}</a>
+        @if (user()) {
+          <a [routerLink]="dashboardPath()">{{ t().nav.dashboard }}</a>
+        } @else {
+          <a routerLink="/login">{{ t().nav.signIn }}</a>
+        }
+        <div class="mobile-lang"><app-lang-switch /></div>
+      </nav>
+    }
   </header>
 
   <main>
-    <!-- ============ HERO ============ -->
-    <section class="hero">
-      <div class="hero-bg" aria-hidden="true"></div>
-
-      <div class="hero-inner">
-        <div class="hero-copy">
-          <p class="badge">
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" fill="currentColor"/></svg>
-            Penjurusan Kelas 11 · Kurikulum Merdeka
-          </p>
-
-          <h1>
-            <span class="h-strong">Petakan Kelas</span>
-            <span class="h-strong">Sesuai Pilihan</span>
-            <span class="h-serif">Masa Depan Murid</span>
-          </h1>
-
-          <p class="tagline">Dari pilihan jurusan kuliah ke kelas yang tepat</p>
-
-          <p class="lead">
-            Class Planner membantu waka kurikulum membentuk kelas mapel pilihan secara adil: murid mengisi pilihan jurusan,
-            sistem menyusun kelas, dan setiap murid melihat seberapa cocok kelasnya dengan cita-citanya.
-          </p>
-
-          <div class="hero-actions">
-            @if (user()) {
-              <a class="btn-primary" [routerLink]="dashboardPath()">
-                Buka Dashboard
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </a>
-            } @else {
-              <a class="btn-primary" routerLink="/login">
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Masuk Portal
-              </a>
-            }
-            <a class="btn-ghost" href="#alur" (click)="scrollTo($event, 'alur')">
-              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-              Lihat Alur
-            </a>
-            <a class="btn-ghost" href="#faq" (click)="scrollTo($event, 'faq')">
-              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-              Pertanyaan Umum
-            </a>
+    <!-- ============ HERO SLIDER ============ -->
+    <section class="hero" aria-roledescription="carousel" [attr.aria-label]="t().hero.label" (mouseenter)="paused.set(true)" (mouseleave)="paused.set(false)"
+             (focusin)="paused.set(true)" (focusout)="paused.set(false)">
+      @for (s of slides(); track $index; let i = $index) {
+        <div class="slide" [class.active]="i === current()" role="group" aria-roledescription="slide"
+             [attr.aria-label]="(i + 1) + ' ' + t().hero.of + ' ' + slides().length" [attr.aria-hidden]="i !== current()">
+          @if (s.image && !failedImages().has(i)) {
+            <img class="slide-img" [src]="s.image" alt="" (error)="imageFailed(i)" />
+          } @else {
+            <!-- belum ada foto sekolah: tampilkan denah kelas -->
+            <svg class="slide-art" viewBox="0 0 240 150" aria-hidden="true">
+              <rect class="board" x="58" y="4" width="124" height="8" rx="4" />
+              @for (row of seatRows; track row) {
+                @for (col of seatCols; track col) {
+                  <rect class="desk" [class.mine]="row === (i + 1) % 4 && col === (i * 2 + 1) % 6"
+                        [attr.x]="8 + col * 38 + (col > 2 ? 10 : 0)" [attr.y]="30 + row * 28" width="30" height="17" rx="4" />
+                }
+              }
+            </svg>
+          }
+          <div class="slide-shade"></div>
+          <div class="slide-copy">
+            <p class="kicker">{{ s.kicker }}</p>
+            <h1>{{ s.title }}</h1>
+            <p class="sub">{{ s.text }}</p>
+            <div class="slide-actions">
+              @if (user()) {
+                <a class="btn btn-gold" [routerLink]="dashboardPath()" [attr.tabindex]="i === current() ? 0 : -1">{{ t().nav.dashboard }}</a>
+              } @else {
+                <a class="btn btn-gold" routerLink="/login" [attr.tabindex]="i === current() ? 0 : -1">{{ t().hero.signInSchool }}</a>
+              }
+              <a class="btn btn-outline" [href]="'#' + s.anchor" (click)="scrollTo($event, s.anchor)" [attr.tabindex]="i === current() ? 0 : -1">{{ s.more }}</a>
+            </div>
           </div>
         </div>
+      }
 
-        <!-- Ilustrasi produk: contoh kelas hasil pemetaan -->
-        <div class="hero-visual" aria-hidden="true">
-          <div class="mock-card">
-            <div class="mock-head">
-              <div>
-                <span class="mock-label">Kelas</span>
-                <strong class="mock-class">XI-3</strong>
+      <button type="button" class="hero-arrow prev" (click)="go(-1)" [attr.aria-label]="t().hero.prev">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <button type="button" class="hero-arrow next" (click)="go(1)" [attr.aria-label]="t().hero.next">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <div class="hero-dots">
+        @for (s of slides(); track $index; let i = $index) {
+          <button type="button" [class.on]="i === current()" (click)="current.set(i)" [attr.aria-label]="t().hero.goTo + ' ' + (i + 1)"></button>
+        }
+      </div>
+    </section>
+
+    <!-- ============ SAMBUTAN ============ -->
+    <section id="tentang" class="welcome">
+      <div class="container narrow center">
+        <p class="eyebrow">{{ t().welcome.eyebrow }}</p>
+        <h2>{{ welcomeTitle() }}</h2>
+        <p class="lead">{{ t().welcome.lead }}</p>
+        <div class="welcome-points">
+          @for (pt of t().welcome.points; track $index) {
+            <div><strong>{{ pt.title }}</strong><span>{{ pt.text }}</span></div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RUMPUN JURUSAN (kartu) ============ -->
+    <section id="rumpun" class="section tint">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">{{ t().rumpun.eyebrow }}</p>
+            <h2>{{ t().rumpun.title }}</h2>
+          </div>
+          <p class="section-note">{{ t().rumpun.note }}</p>
+        </div>
+
+        <div class="cards">
+          @for (r of groups(); track $index) {
+            <article class="card">
+              <div class="card-top" [style.--tone]="r.tone">
+                <span class="card-icon"><app-icon [name]="r.icon" [size]="26" /></span>
+                <span class="card-count">{{ r.majors.length }}+ {{ t().rumpun.count }}</span>
               </div>
-              <span class="chip chip-mixed">Campuran</span>
-            </div>
-
-            <ul class="mock-subjects">
-              <li class="ipa">Biologi</li>
-              <li class="ipa">Kimia</li>
-              <li class="ipa">Matematika Lanjut</li>
-              <li class="ips">Ekonomi</li>
-              <li class="ips">Geografi</li>
-            </ul>
-
-            <div class="mock-meter">
-              <span>Kecocokan dengan pilihanmu</span>
-              <strong>88%</strong>
-            </div>
-            <div class="bar"><i style="width: 88%"></i></div>
-
-            <div class="mock-foot">
-              <span>34 / 36 murid</span>
-              <span class="dot-ok">Kursi tersedia</span>
-            </div>
-          </div>
-
-          <div class="float float-top">
-            <span class="float-icon ok">✓</span>
-            <div>
-              <small>Pilihan 1</small>
-              <strong>Kedokteran</strong>
-            </div>
-          </div>
-
-          <div class="float float-bottom">
-            <span class="float-icon lock">★</span>
-            <div>
-              <small>Status kelas</small>
-              <strong>Final disetujui waka</strong>
-            </div>
-          </div>
+              <div class="card-body">
+                <h3>{{ r.name }}</h3>
+                <p>{{ r.majors.join(', ') }}{{ t().rumpun.etc }}</p>
+                <div class="chips">
+                  @for (m of r.subjects; track m) { <span>{{ m }}</span> }
+                </div>
+              </div>
+            </article>
+          }
         </div>
       </div>
     </section>
 
-    <!-- ============ FITUR ============ -->
-    <section id="fitur" class="section">
-      <div class="section-inner">
-        <p class="eyebrow">Fitur</p>
-        <h2>Semua tahap penjurusan dalam satu tempat</h2>
+    <!-- ============ TAHAPAN (sorotan + daftar tanggal) ============ -->
+    <section id="jadwal" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">{{ t().steps.eyebrow }}</p>
+            <h2>{{ t().steps.title }}</h2>
+          </div>
+          <p class="section-note">{{ t().steps.note }}</p>
+        </div>
 
-        <div class="features">
-          <article class="feature">
-            <span class="feature-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2zM9 13l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <h3>Kuesioner jurusan</h3>
-            <p>Murid memilih dua jurusan kuliah impian. Waka bisa menambah pertanyaan sesuai kebutuhan tiap tahun.</p>
+        <div class="schedule">
+          <article class="featured">
+            <div class="featured-art" aria-hidden="true">
+              <svg viewBox="0 0 240 132">
+                <rect class="board" x="58" y="4" width="124" height="8" rx="4" />
+                @for (row of seatRows; track row) {
+                  @for (col of seatCols; track col) {
+                    <rect class="desk" [class.mine]="row === 2 && col === 3"
+                          [attr.x]="8 + col * 38 + (col > 2 ? 10 : 0)" [attr.y]="28 + row * 26" width="30" height="16" rx="4" />
+                  }
+                }
+              </svg>
+              <span class="date-block"><strong>01</strong><small>{{ t().steps.start }}</small></span>
+            </div>
+            <div class="featured-body">
+              <h3>{{ t().steps.featuredTitle }}</h3>
+              <p>{{ t().steps.featuredText }}</p>
+            </div>
           </article>
 
-          <article class="feature">
-            <span class="feature-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
-            </span>
-            <h3>Kelas tersusun otomatis</h3>
-            <p>Sistem membentuk kelas berisi lima mapel pilihan, maksimal 36 murid, dengan mempertimbangkan ketersediaan guru.</p>
-          </article>
-
-          <article class="feature">
-            <span class="feature-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <h3>Persentase kecocokan</h3>
-            <p>Murid melihat kelas mana yang paling sesuai dengan pilihan jurusan dan kekuatan nilai rapornya.</p>
-          </article>
-
-          <article class="feature">
-            <span class="feature-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <h3>Review &amp; persetujuan</h3>
-            <p>Waka meninjau hasil, memindahkan murid bila perlu, lalu menyetujui kelas final yang tidak bisa diubah lagi.</p>
-          </article>
+          <ol class="dates">
+            @for (s of t().steps.items; track $index; let i = $index) {
+              <li>
+                <span class="date-block small"><strong>{{ (i + 2).toString().padStart(2, '0') }}</strong><small>{{ t().steps.stage }}</small></span>
+                <div>
+                  <h3>{{ s.title }}</h3>
+                  <p>{{ s.text }}</p>
+                </div>
+              </li>
+            }
+          </ol>
         </div>
       </div>
     </section>
 
-    <!-- ============ ALUR ============ -->
-    <section id="alur" class="section section-tint">
-      <div class="section-inner">
-        <p class="eyebrow">Alur</p>
-        <h2>Lima langkah dari kuesioner sampai kelas final</h2>
-
-        <ol class="steps">
-          <li>
-            <span class="step-no">1</span>
-            <div>
-              <h3>Isi kuesioner</h3>
-              <p>Masuk dengan akun Google sekolah, lalu pilih jurusan kuliah 1 dan 2.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-no">2</span>
-            <div>
-              <h3>Sistem menyusun kelas</h3>
-              <p>Mapel pilihan disusun dari kebutuhan seluruh angkatan.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-no">3</span>
-            <div>
-              <h3>Pilih kelas</h3>
-              <p>Bandingkan persentase kecocokan, lalu pilih kelas yang paling sesuai.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-no">4</span>
-            <div>
-              <h3>Surat pernyataan</h3>
-              <p>Tanda tangan digital oleh orang tua, lalu unggah kembali.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-no">5</span>
-            <div>
-              <h3>Kelas final</h3>
-              <p>Setelah pemerataan dan persetujuan waka, kelasmu ditetapkan.</p>
-            </div>
-          </li>
-        </ol>
+    <!-- ============ ANGKA ============ -->
+    <section class="stats">
+      <div class="container stats-grid">
+        @for (f of t().facts; track $index) {
+          <div class="stat">
+            <strong>{{ f.value }}</strong>
+            <span>{{ f.label }}</span>
+          </div>
+        }
       </div>
     </section>
 
-    <!-- ============ FAQ ============ -->
+    <!-- ============ TANYA JAWAB ============ -->
     <section id="faq" class="section">
-      <div class="section-inner narrow">
-        <p class="eyebrow">FAQ</p>
-        <h2>Pertanyaan umum</h2>
-
+      <div class="container faq-wrap">
+        <div>
+          <p class="eyebrow">{{ t().faq.eyebrow }}</p>
+          <h2>{{ t().faq.title }}</h2>
+          <p class="section-note">{{ t().faq.note }}</p>
+        </div>
         <div class="faq">
-          <details>
-            <summary>Akun apa yang dipakai untuk masuk?</summary>
-            <p>Akun Google, misalnya akun belajar.id. Saat pertama kali masuk, kamu diminta mengisi kode sekolah, NIS, dan tanggal lahir untuk mengaktifkan akun.</p>
-          </details>
-          <details>
-            <summary>Apakah kelas yang saya pilih langsung final?</summary>
-            <p>Belum. Kelas dengan peminat lebih dari kapasitas akan diratakan oleh sistem, dengan tetap mengutamakan kecocokan dengan pilihan jurusanmu.</p>
-          </details>
-          <details>
-            <summary>Bagaimana persentase kecocokan dihitung?</summary>
-            <p>Dari jumlah mapel yang dibutuhkan jurusan pilihanmu yang ada di kelas tersebut, ditambah kekuatan nilai rapormu pada mapel-mapel kelas itu.</p>
-          </details>
-          <details>
-            <summary>Bisakah saya mengganti pilihan kelas?</summary>
-            <p>Bisa, selama masa pemilihan kelas masih dibuka. Surat pernyataan akan dibuat ulang sesuai pilihan terakhir.</p>
-          </details>
+          @for (q of t().faq.items; track $index) {
+            <details>
+              <summary>{{ q.q }}</summary>
+              <p>{{ q.a }}</p>
+            </details>
+          }
         </div>
       </div>
     </section>
 
-    <!-- ============ CTA ============ -->
+    <!-- ============ AJAKAN ============ -->
     <section class="cta">
-      <div class="cta-inner">
+      <div class="container cta-inner">
         <div>
-          <h2>Siap memulai penjurusan?</h2>
-          <p>Masuk dengan akun Google sekolahmu untuk melihat tahapan yang sedang berjalan.</p>
+          <h2>{{ t().cta.title }}</h2>
+          <p>{{ t().cta.text }}</p>
         </div>
         @if (user()) {
-          <a class="btn-light" [routerLink]="dashboardPath()">Buka Dashboard</a>
+          <a class="btn btn-gold" [routerLink]="dashboardPath()">{{ t().nav.dashboard }}</a>
         } @else {
-          <a class="btn-light" routerLink="/login">Masuk Portal</a>
+          <a class="btn btn-gold" routerLink="/login">{{ t().cta.button }}</a>
         }
       </div>
     </section>
   </main>
 
+  <!-- ============ FOOTER ============ -->
   <footer class="footer">
-    <span>© {{ year }} {{ branding.schoolName }}</span>
-    <span>Didukung {{ branding.appName }}</span>
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <app-brand-mark [size]="44" [alt]="'Logo ' + branding.schoolName" />
+        <strong>{{ branding.schoolName }}</strong>
+        <p>{{ t().footer.tagline }}</p>
+      </div>
+      <div>
+        <h3>{{ t().footer.pages }}</h3>
+        <ul>
+          <li><a href="#tentang" (click)="scrollTo($event, 'tentang')">{{ t().nav.about }}</a></li>
+          <li><a href="#rumpun" (click)="scrollTo($event, 'rumpun')">{{ t().nav.majors }}</a></li>
+          <li><a href="#jadwal" (click)="scrollTo($event, 'jadwal')">{{ t().nav.steps }}</a></li>
+          <li><a href="#faq" (click)="scrollTo($event, 'faq')">{{ t().nav.faq }}</a></li>
+        </ul>
+        <app-lang-switch tone="dark" class="footer-lang" />
+      </div>
+      <div>
+        <h3>{{ t().footer.contact }}</h3>
+        <ul class="contact">
+          @if (branding.address) { <li>{{ branding.address }}</li> }
+          @if (branding.phone) { <li><a [href]="'tel:' + branding.phone">{{ branding.phone }}</a></li> }
+          @if (branding.email) { <li><a [href]="'mailto:' + branding.email">{{ branding.email }}</a></li> }
+          @if (!branding.address && !branding.phone && !branding.email) { <li>{{ t().footer.contactFallback }}</li> }
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© {{ year }} {{ branding.schoolName }}</span>
+      <span>{{ t().footer.poweredBy }} {{ branding.appName }}</span>
+    </div>
   </footer>
 
   <!-- Popup login (route anak /login) -->

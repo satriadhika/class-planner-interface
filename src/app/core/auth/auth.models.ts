@@ -14,6 +14,17 @@ export interface CurrentUser {
   school: SchoolRef | null; // null untuk SUPER_ADMIN
   teacherId: number | null;
   studentId: number | null;
+  /** Menu waka yang dimatikan super admin untuk sekolah ini (kunci WakaMenu). */
+  disabledMenus?: string[];
+  /** Guru BK: boleh membuka perhitungan eligible SNBP. */
+  counselor?: boolean;
+}
+
+/** Hasil pendaftaran guru: selalu PENDING sampai disetujui waka. */
+export interface TeacherRegisterResponse {
+  status: 'PENDING';
+  schoolName: string;
+  email: string;
 }
 
 export interface LoginResponse {

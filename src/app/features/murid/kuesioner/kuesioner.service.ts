@@ -3,7 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { formatDateTime } from '../murid-progress.service';
 
 export type KuesionerStatus = 'NOT_STARTED' | 'DRAFT' | 'SUBMITTED';
 
@@ -13,14 +12,17 @@ export interface MajorOption {
   name: string;
   /** Mapel pilihan yang dibutuhkan jurusan ini */
   requiredSubjects: string[];
+  /** Bagian dari requiredSubjects yang wajib ada di kelas (kosong = minimal salah satu) */
+  coreSubjects?: string[];
 }
 
 export interface KuesionerData {
   status: KuesionerStatus;
   /** false kalau sudah dikirim atau periode kuesioner sudah tutup */
   editable: boolean;
-  closeAtLabel: string | null;
-  submittedAtLabel: string | null;
+  /** ISO; diformat sesuai bahasa di komponen */
+  closeAt: string | null;
+  submittedAt: string | null;
   student: {
     fullName: string;
     studentNumber: string;
@@ -46,14 +48,10 @@ export interface KuesionerAnswers {
 }
 
 /** Bentuk response GET/PUT /me/questionnaire dari backend (tanggal ISO). */
-interface QuestionnaireView extends Omit<KuesionerData, 'closeAtLabel' | 'submittedAtLabel'> {
-  closeAt: string | null;
-  submittedAt: string | null;
-}
+type QuestionnaireView = KuesionerData;
 
 function toData(view: QuestionnaireView): KuesionerData {
-  const { closeAt, submittedAt, ...rest } = view;
-  return { ...rest, closeAtLabel: formatDateTime(closeAt), submittedAtLabel: formatDateTime(submittedAt) };
+  return view;
 }
 
 /**

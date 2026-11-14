@@ -6,6 +6,22 @@ import { environment } from '../../../environments/environment';
 
 /* ===================== tipe data ===================== */
 
+/** Nilai rapor & minat bakat satu murid di satu siklus (null = belum diunggah). */
+export interface AssessmentRow {
+  studentId: number;
+  studentNumber: string;
+  fullName: string;
+  classLabel: string | null;
+  ipaSem1: number | null;
+  ipaSem2: number | null;
+  reportIpa: number | null;
+  ipsSem1: number | null;
+  ipsSem2: number | null;
+  reportIps: number | null;
+  aptitudeIpa: number | null;
+  aptitudeIps: number | null;
+}
+
 export interface CycleSummary {
   id: number;
   name: string;
@@ -209,6 +225,8 @@ export interface Major {
   name: string;
   subjectCodes: string[];
   subjectNames: string[];
+  /** Bagian dari subjectCodes yang wajib ada di kelas; kosong = minimal salah satu mapel. */
+  coreSubjectCodes: string[];
 }
 
 export interface StudentRow {
@@ -239,6 +257,8 @@ export interface SchoolProfile {
   phone: string | null;
   email: string | null;
   principalName: string | null;
+  /** Isi surat pernyataan (JSON); null = isi bawaan */
+  letterTemplate: string | null;
 }
 
 export interface ImportResult {
@@ -323,9 +343,14 @@ export class WakaApi {
   }
 
   // --- nilai
-  importAssessments(id: number, file: File): Observable<ImportResult> {
+  assessments(id: number): Observable<AssessmentRow[]> {
+    return this.http.get<AssessmentRow[]>(`${this.base}/cycles/${id}/assessments`);
+  }
+  /** semester: 'AUTO' (baca dari judul leger), 'GANJIL', atau 'GENAP'. */
+  importAssessments(id: number, file: File, semester: 'AUTO' | 'GANJIL' | 'GENAP' = 'AUTO'): Observable<ImportResult> {
     const body = new FormData();
     body.append('file', file);
+    body.append('semester', semester);
     return this.http.post<ImportResult>(`${this.base}/cycles/${id}/assessments/import`, body);
   }
 
@@ -342,7 +367,7 @@ export class WakaApi {
   majors(): Observable<Major[]> {
     return this.http.get<Major[]>(`${this.base}/majors`);
   }
-  saveMajor(m: { code: string; name: string; subjectCodes: string[] }, id?: number): Observable<Major> {
+  saveMajor(m: { code: string; name: string; subjectCodes: string[]; coreSubjectCodes: string[] }, id?: number): Observable<Major> {
     return id ? this.http.put<Major>(`${this.base}/majors/${id}`, m) : this.http.post<Major>(`${this.base}/majors`, m);
   }
   deleteMajor(id: number): Observable<void> {
@@ -361,6 +386,12 @@ export class WakaApi {
   }
   deleteStudent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/students/${id}`);
+  }
+  /** Impor mapel & jurusan dari Excel (tabel KODE MAPEL dan/atau KODE JURUSAN). */
+  importMaster(file: File): Observable<ImportResult> {
+    const body = new FormData();
+    body.append('file', file);
+    return this.http.post<ImportResult>(`${this.base}/master/import`, body);
   }
   importStudents(file: File, entryYear: number | null): Observable<ImportResult> {
     const body = new FormData();

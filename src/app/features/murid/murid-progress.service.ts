@@ -3,6 +3,8 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { currentLang } from '../../core/i18n/i18n';
+import { fmtDate, fmtDateTime } from '../../shared/labels/labels';
 
 export type StageKey = 'kuesioner' | 'pilih-kelas' | 'surat' | 'kelas-final';
 /** missed = periode tahap sudah lewat tapi belum dikerjakan. */
@@ -43,7 +45,7 @@ interface ProgressResponse {
   stages: { key: ApiStageKey; status: ApiStageStatus; startedAt: string | null; completedAt: string | null }[];
 }
 
-/** Teks tampilan per tahap. Status & tanggalnya dari backend, teksnya dari sini. */
+/** Teks bawaan per tahap (bahasa Indonesia). Beranda memakai teks dua bahasa dari beranda.i18n.ts. */
 const STAGE_TEXT: Record<ApiStageKey, Omit<Stage, 'status' | 'startedAt' | 'completedAt'>> = {
   KUESIONER: {
     key: 'kuesioner',
@@ -90,15 +92,14 @@ export function activityLabel(action: string): string {
   return ACTIVITY_LABEL[action] ?? action;
 }
 
-const DATE_FMT = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-const DATE_TIME_FMT = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-
+/** Tanggal panjang sesuai bahasa aktif. */
 export function formatDate(iso: string | null | undefined): string | null {
-  return iso ? DATE_FMT.format(new Date(iso)) : null;
+  return iso ? fmtDate(iso) : null;
 }
 
+/** Tanggal + jam sesuai bahasa aktif. */
 export function formatDateTime(iso: string | null | undefined): string | null {
-  return iso ? DATE_TIME_FMT.format(new Date(iso)) : null;
+  return iso ? fmtDateTime(iso) : null;
 }
 
 /** Progres tahap penjurusan murid yang sedang login. Sumber data: GET /me/progress. */
@@ -157,7 +158,11 @@ export class MuridProgressService {
       }),
       map(() => undefined),
       catchError(() => {
-        this.error.set('Progres penjurusan gagal dimuat. Coba muat ulang halaman.');
+        this.error.set(
+          currentLang() === 'en'
+            ? 'Could not load your progress. Please reload the page.'
+            : 'Progres penjurusan gagal dimuat. Coba muat ulang halaman.',
+        );
         return of(undefined);
       }),
       finalize(() => {

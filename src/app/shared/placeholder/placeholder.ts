@@ -1,4 +1,7 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+
+import { I18n } from '../../core/i18n/i18n';
+import { translateTitle } from '../../core/i18n/title-strategy';
 
 /**
  * Halaman sementara. Judul diambil dari `data.title` di route
@@ -8,8 +11,8 @@ import { Component, input } from '@angular/core';
   selector: 'app-placeholder',
   template: `
     <section class="placeholder">
-      <h2>{{ title() }}</h2>
-      <p>Halaman ini sedang dibuat.</p>
+      <h2>{{ heading() }}</h2>
+      <p>{{ i18n.lang() === 'en' ? 'This page is coming soon.' : 'Halaman ini sedang dibuat.' }}</p>
     </section>
   `,
   styles: `
@@ -32,4 +35,6 @@ import { Component, input } from '@angular/core';
 })
 export class Placeholder {
   readonly title = input('');
+  readonly i18n = inject(I18n);
+  readonly heading = computed(() => translateTitle(this.title(), this.i18n.lang()));
 }

@@ -3,21 +3,40 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { problemCode, problemMessage } from '../../../core/api/problem';
-import { CLASS_TYPE_LABEL, TIER_LABEL, fmtDateTime } from '../../../shared/labels/labels';
+import { I18n } from '../../../core/i18n/i18n';
+import { Icon } from '../../../shared/icon/icon';
+import { CLASS_TYPE_TEXT, fmtDateTime } from '../../../shared/labels/labels';
 import { MuridProgressService } from '../murid-progress.service';
 import { ClassOption, ClassOptions, MuridApi } from '../murid-api';
+import { PILIH_KELAS_TEXT } from './pilih-kelas.i18n';
 
-/** Murid memilih kelas dari semua kelas yang memuat mapel jurusan 1. */
+/** Murid memilih kelas dari semua kelas yang memuat mapel jurusan 1. Satu kartu per kelas, dibagi beberapa bagian. */
 @Component({
   selector: 'app-pilih-kelas',
-  imports: [DecimalPipe, RouterLink],
+  imports: [DecimalPipe, RouterLink, Icon],
   template: `
     <div class="cp-page">
-      <header class="cp-head">
+      <header class="intro">
         <div>
-          <h1>Pilih kelas</h1>
-          <p>Kelas diurutkan dari yang paling cocok dengan jurusan dan minatmu. Pilih yang paling sesuai menurutmu.</p>
+          <h1>{{ t().title }}</h1>
+          <p>{{ t().intro }}</p>
         </div>
+        @if (data(); as d) {
+          <aside class="cp-note">
+            @if (d.cycleStatus === 'SELECTION_OPEN') {
+              <h3>{{ t().closesAt.replace('{date}', fmt(d.selectionCloseAt)) }}</h3>
+            } @else {
+              <h3>{{ t().closed }}</h3>
+            }
+            <p>
+              @if (d.currentClassId) {
+                {{ t().changesLeftBefore }} <strong>{{ t().changesLeftCount.replace('{n}', '' + changesLeft()) }}</strong> {{ t().changesLeftAfter }}
+              } @else {
+                {{ t().notChosen.replace('{n}', '' + d.maxChanges) }}
+              }
+            </p>
+          </aside>
+        }
       </header>
 
       @if (message(); as m) {
@@ -26,123 +45,237 @@ import { ClassOption, ClassOptions, MuridApi } from '../murid-api';
 
       @if (notOpen()) {
         <div class="cp-empty">
-          Pemilihan kelas belum dibuka. Pastikan kuesionermu sudah dikirim, nanti kamu dapat kabar saat kelas bisa dipilih.
-          <a routerLink="/murid">Kembali ke beranda</a>
+          {{ t().notOpen }}
+          <a routerLink="/murid">{{ t().backHome }}</a>
         </div>
       }
 
       @if (data(); as d) {
-        <section class="cp-card summary">
-          <div class="cp-row">
-            <div>
-              <div class="cp-small cp-muted">Jurusan pilihanmu</div>
-              <strong>1. {{ d.major1 ?? '-' }}</strong>
-              @if (d.major2) { <span class="cp-muted"> · </span><strong>2. {{ d.major2 }}</strong> }
-            </div>
-            <span class="cp-spacer"></span>
-            <div class="right">
-              @if (d.cycleStatus === 'SELECTION_OPEN') {
-                <div class="cp-small cp-muted">Ditutup {{ fmt(d.selectionCloseAt) }}</div>
-              } @else {
-                <span class="cp-badge">Pemilihan sudah ditutup</span>
-              }
-              @if (d.currentClassId) {
-                <div class="cp-small">Sisa kesempatan ganti: <strong>{{ changesLeft() }}</strong> dari {{ d.maxChanges }}</div>
-              }
-            </div>
+        <section class="majors">
+          <div>
+            <span class="cp-label">{{ t().major1 }}</span>
+            <strong>{{ d.major1 ?? '-' }}</strong>
           </div>
-          <div class="cp-alert cp-alert--warn note">
-            Pilihanmu jadi prioritas, tapi kelas final bisa berbeda kalau kelas yang kamu pilih kelebihan murid.
-            Kalau dipindah, kamu tetap ditempatkan di kelas yang memuat mapel jurusan 1-mu dan sekecil mungkin selisih kecocokannya.
+          <div>
+            <span class="cp-label">{{ t().major2 }}</span>
+            <strong>{{ d.major2 ?? t().notFilled }}</strong>
           </div>
+          <p class="fine">
+            <app-icon name="info" [size]="16" />
+            {{ t().fine }}
+          </p>
         </section>
 
         <div class="options">
           @for (o of d.options; track o.classId; let i = $index) {
-            <article class="cp-card option" [class.chosen]="o.classId === d.currentClassId">
-              <div class="cp-row top">
-                <h2>Kelas {{ o.label }}</h2>
-                @if (i === 0) { <span class="cp-badge cp-badge--ok">Paling cocok</span> }
-                @if (o.classId === d.currentClassId) { <span class="cp-badge cp-badge--primary">Pilihanmu</span> }
+            <article class="option" [class.chosen]="o.classId === d.currentClassId">
+              <!-- judul -->
+              <header class="option-head">
+                <h2>{{ t().classPrefix }} {{ o.label }}</h2>
+                @if (o.classId === d.currentClassId) {
+                  <span class="cp-ok"><app-icon name="check-circle" [size]="17" /> {{ t().yourChoice }}</span>
+                } @else if (i === 0) {
+                  <span class="cp-badge cp-badge--primary">{{ t().bestMatch }}</span>
+                }
                 <span class="cp-spacer"></span>
-                <span class="cp-small cp-muted">{{ typeLabel[o.type] }}</span>
-              </div>
+                <span class="cp-small cp-muted">{{ typeLabel()[o.type] }}</span>
+              </header>
 
-              <div class="score">
-                <strong>{{ o.matchPercent | number: '1.0-1' }}%</strong>
-                <span>kecocokan</span>
-              </div>
-              <div class="cp-bar"><i [style.width.%]="o.matchPercent"></i></div>
-              <p class="cp-small tier"><span [class]="'cp-badge cp-badge--tier' + o.tier">P{{ o.tier }}</span> {{ tierLabel[o.tier] }}</p>
-
-              <div class="cp-chips">
-                @for (s of o.subjects; track s) {
-                  <span class="cp-chip" [class.need]="!o.extraSubjects.includes(s)">{{ s }}</span>
-                }
-              </div>
-
-              <dl class="cover cp-small">
-                <div><dt>Mapel jurusan 1</dt><dd>{{ o.major1Coverage | number: '1.0-0' }}% terpenuhi</dd></div>
-                <div><dt>Mapel jurusan 2</dt><dd>{{ d.major2 ? (o.major2Coverage | number: '1.0-0') + '% terpenuhi' : '-' }}</dd></div>
-              </dl>
-              @if (o.missingMajor1.length || o.missingMajor2.length) {
-                <p class="cp-small missing">
-                  Tidak ada di kelas ini:
-                  @for (m of missingAll(o); track m) { <span class="cp-chip cp-chip--missing">{{ m }}</span> }
+              <!-- kecocokan -->
+              <div class="part">
+                <div class="score">
+                  <strong>{{ o.matchPercent | number: '1.0-0' }}</strong><span>{{ t().matchSuffix }}</span>
+                </div>
+                <div class="cp-bar"><i [style.width.%]="o.matchPercent"></i></div>
+                <p class="tier" [class.good]="o.tier <= 2">
+                  @if (o.tier <= 2) { <app-icon name="check-circle" [size]="16" /> } @else { <app-icon name="info" [size]="16" /> }
+                  {{ tierText(o.tier, !!d.major2) }}
                 </p>
-              }
-              @if (o.extraSubjects.length) {
-                <p class="cp-small cp-muted">Mapel tambahan (di luar kebutuhan jurusanmu): {{ o.extraSubjects.join(', ') }}</p>
-              }
+              </div>
 
-              @if (d.editable && o.classId !== d.currentClassId) {
-                @if (confirming() === o.classId) {
-                  <div class="cp-row">
-                    <span class="cp-small">{{ d.currentClassId ? 'Ganti ke kelas ' + o.label + '? Sisa kesempatan jadi ' + (changesLeft() - 1) + '.' : 'Pilih kelas ' + o.label + '?' }}</span>
-                    <button class="cp-btn cp-btn--primary cp-btn--sm" type="button" [disabled]="busy()" (click)="choose(o)">Ya</button>
-                    <button class="cp-btn cp-btn--sm" type="button" (click)="confirming.set(null)">Batal</button>
+              <!-- mapel jurusan -->
+              <div class="part">
+                <div class="cp-meter">
+                  <div class="cp-meter__row">
+                    <span>{{ t().forMajor.replace('{major}', d.major1 ?? t().major1Fallback) }}</span>
+                    @if (o.missingMajor1.length === 0) {
+                      <span class="cp-ok"><app-icon name="check-circle" [size]="16" /> {{ t().complete }}</span>
+                    } @else {
+                      <b>{{ t().covered.replace('{n}', '' + (o.major1Coverage | number: '1.0-0')) }}</b>
+                    }
                   </div>
-                } @else {
-                  <button class="cp-btn" [class.cp-btn--primary]="!d.currentClassId" type="button" (click)="confirming.set(o.classId)">
-                    {{ d.currentClassId ? 'Ganti ke kelas ini' : 'Pilih kelas ini' }}
-                  </button>
+                  <div class="cp-bar"><i [style.width.%]="o.major1Coverage"></i></div>
+                  @if (o.missingMajor1.length) { <small class="missing">{{ t().missing.replace('{list}', o.missingMajor1.join(', ')) }}</small> }
+                </div>
+                @if (d.major2) {
+                  <div class="cp-meter">
+                    <div class="cp-meter__row">
+                      <span>{{ t().forMajor.replace('{major}', d.major2) }}</span>
+                      @if (o.missingMajor2.length === 0) {
+                        <span class="cp-ok"><app-icon name="check-circle" [size]="16" /> {{ t().complete }}</span>
+                      } @else {
+                        <b>{{ t().covered.replace('{n}', '' + (o.major2Coverage | number: '1.0-0')) }}</b>
+                      }
+                    </div>
+                    <div class="cp-bar"><i [style.width.%]="o.major2Coverage"></i></div>
+                    @if (o.missingMajor2.length) { <small class="missing">{{ t().missing.replace('{list}', o.missingMajor2.join(', ')) }}</small> }
+                  </div>
                 }
-              }
+              </div>
+
+              <!-- mapel kelas -->
+              <div class="part">
+                <span class="cp-label">{{ t().classSubjects }}</span>
+                <div class="cp-chips subjects">
+                  @for (s of o.subjects; track s) {
+                    <span class="cp-chip" [class.need]="!o.extraSubjects.includes(s)">{{ s }}</span>
+                  }
+                </div>
+                @if (o.extraSubjects.length) {
+                  <small class="cp-muted">{{ t().extraNote }}</small>
+                }
+              </div>
+
+              <!-- aksi -->
+              <footer class="option-foot">
+                @if (o.classId === d.currentClassId) {
+                  <span class="cp-small cp-muted">{{ t().currentNote }}</span>
+                } @else if (confirming() === o.classId) {
+                  <span class="cp-small confirm-text">
+                    {{ d.currentClassId ? t().confirmChange.replace('{label}', o.label).replace('{n}', '' + (changesLeft() - 1)) : t().confirmFirst.replace('{label}', o.label) }}
+                  </span>
+                  <button class="cp-btn cp-btn--primary cp-btn--sm" type="button" [disabled]="busy()" (click)="choose(o)">{{ t().yes }}</button>
+                  <button class="cp-btn cp-btn--sm" type="button" (click)="confirming.set(null)">{{ t().cancel }}</button>
+                } @else {
+                  <button class="cp-btn" [class.cp-btn--primary]="!d.currentClassId" type="button"
+                          [disabled]="!d.editable" (click)="confirming.set(o.classId)">
+                    {{ d.currentClassId ? t().changeTo : t().choose }}
+                  </button>
+                  @if (!d.editable) { <span class="cp-small cp-muted">{{ lockedReason() }}</span> }
+                }
+              </footer>
             </article>
           } @empty {
-            <div class="cp-empty">Belum ada kelas yang memuat mapel jurusan 1-mu. Hubungi waka kurikulum.</div>
+            <div class="cp-empty">{{ t().empty }}</div>
           }
         </div>
       }
     </div>
   `,
   styles: `
-    .summary .right { text-align: right; }
-    .note { margin: 14px 0 0; }
-    .options { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-    .option { display: flex; flex-direction: column; gap: 10px; }
-    .option.chosen { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
-    .option h2 { margin: 0; }
-    .top { gap: 8px; }
-    .score { display: flex; align-items: baseline; gap: 6px; }
-    .score strong { font-size: 2rem; line-height: 1; }
+    .intro {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px 40px;
+    }
+    .intro > div { flex: 1 1 420px; }
+    .intro h1 {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3vw, 2.3rem);
+      font-weight: 600;
+      color: var(--brand-ink);
+    }
+    .intro p { max-width: 62ch; margin: 0; color: var(--text); line-height: 1.6; }
+    .intro .cp-note { flex: 0 1 300px; }
+
+    .majors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 40px;
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .majors > div { display: grid; gap: 2px; }
+    .majors strong { font-size: 1.05rem; color: var(--brand-ink); }
+    .fine {
+      display: flex;
+      gap: 8px;
+      flex-basis: 100%;
+      margin: 4px 0 0;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .fine app-icon { margin-top: 2px; }
+
+    .options {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+      align-items: start;
+    }
+    .option {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .option.chosen { border: 2px solid var(--primary); }
+    .option-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px 12px;
+    }
+    .option-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--brand-ink);
+    }
+    .part {
+      display: grid;
+      gap: 8px;
+      margin: 0 20px;
+      padding: 14px 0;
+      border-top: 1px solid var(--border);
+    }
+    .part .cp-meter + .cp-meter { margin-top: 8px; }
+    .score { display: flex; align-items: baseline; gap: 4px; }
+    .score strong {
+      font-family: var(--font-display);
+      font-size: 2.6rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--brand-ink);
+    }
     .score span { color: var(--muted); }
-    .tier { margin: 0; display: flex; align-items: center; gap: 6px; }
-    .cover { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
-    .cover dt { color: var(--muted); }
-    .cover dd { margin: 0; font-weight: 600; }
-    .missing { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; }
-    .cp-chip.need { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
-    .option > button { margin-top: auto; align-self: flex-start; }
-    @media (max-width: 640px) { .summary .right { text-align: left; } }
+    .tier { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 0.9rem; color: var(--muted); }
+    .tier.good { color: var(--success); font-weight: 600; }
+    .missing { color: var(--danger); }
+    .subjects .cp-chip { background: var(--chip-bg); color: var(--muted); font-weight: 500; }
+    .subjects .cp-chip.need { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+    .option-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: auto;
+      padding: 14px 20px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-tint);
+      border-radius: 0 0 10px 10px;
+    }
+    .confirm-text { flex-basis: 100%; font-weight: 600; }
   `,
 })
 export class PilihKelas {
   private readonly api = inject(MuridApi);
   private readonly progress = inject(MuridProgressService);
 
-  readonly typeLabel = CLASS_TYPE_LABEL;
-  readonly tierLabel = TIER_LABEL;
+  private readonly i18n = inject(I18n);
+  /** Teks sesuai bahasa aktif. */
+  readonly t = computed(() => PILIH_KELAS_TEXT[this.i18n.lang()]);
+  readonly typeLabel = computed(() => CLASS_TYPE_TEXT[this.i18n.lang()]);
 
   readonly data = signal<ClassOptions | null>(null);
   readonly notOpen = signal(false);
@@ -174,7 +307,7 @@ export class PilihKelas {
         this.busy.set(false);
         this.confirming.set(null);
         this.data.set(d);
-        this.message.set({ text: first ? `Kamu memilih kelas ${o.label}.` : `Pilihan diganti ke kelas ${o.label}.`, error: false });
+        this.message.set({ text: (first ? this.t().chosen : this.t().changed).replace('{label}', o.label), error: false });
         this.progress.load().subscribe();
       },
       error: (e: unknown) => {
@@ -185,8 +318,24 @@ export class PilihKelas {
     });
   }
 
-  missingAll(o: ClassOption): string[] {
-    return [...new Set([...o.missingMajor1, ...o.missingMajor2])];
+  /** Kenapa tombol pilih tidak bisa dipakai. */
+  readonly lockedReason = computed(() => {
+    const d = this.data();
+    if (!d) return '';
+    if (d.cycleStatus !== 'SELECTION_OPEN') return this.t().lockedClosed;
+    return this.t().lockedNoChanges;
+  });
+
+  /** Penjelasan prioritas dalam bahasa sehari-hari. */
+  tierText(tier: number, hasMajor2: boolean): string {
+    const t = this.t();
+    switch (tier) {
+      case 1: return hasMajor2 ? t.tier1Both : t.tier1One;
+      case 2: return t.tier2;
+      case 3: return t.tier3;
+      case 4: return t.tier4;
+      default: return t.tier5;
+    }
   }
 
   fmt(iso: string | null): string {

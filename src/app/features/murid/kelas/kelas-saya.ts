@@ -1,10 +1,12 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { problemCode, problemMessage } from '../../../core/api/problem';
-import { SOURCE_LABEL, TIER_LABEL, fmtDateTime } from '../../../shared/labels/labels';
+import { I18n } from '../../../core/i18n/i18n';
+import { SOURCE_TEXT, TIER_TEXT, fmtDateTime } from '../../../shared/labels/labels';
 import { FinalClass, MuridApi } from '../murid-api';
+import { KELAS_SAYA_TEXT } from './kelas-saya.i18n';
 
 /** Kelas final murid setelah disetujui waka. */
 @Component({
@@ -14,8 +16,8 @@ import { FinalClass, MuridApi } from '../murid-api';
     <div class="cp-page">
       <header class="cp-head">
         <div>
-          <h1>Kelas saya</h1>
-          <p>Kelas 11 yang sudah ditetapkan dan disetujui waka kurikulum.</p>
+          <h1>{{ t().title }}</h1>
+          <p>{{ t().intro }}</p>
         </div>
       </header>
 
@@ -23,23 +25,23 @@ import { FinalClass, MuridApi } from '../murid-api';
 
       @if (pending()) {
         <div class="cp-empty">
-          Kelas final belum disetujui. Setelah pemilihan kelas ditutup, waka kurikulum meratakan jumlah murid per kelas lalu menyetujui hasilnya.
-          <a routerLink="/murid">Kembali ke beranda</a>
+          {{ t().pending }}
+          <a routerLink="/murid">{{ t().backHome }}</a>
         </div>
       }
 
       @if (data(); as d) {
         <section class="cp-card hero">
-          <div class="cp-small cp-muted">{{ d.cycleName }} · Tahun ajaran {{ d.targetAcademicYear }}</div>
-          <h2>Kelas {{ d.classLabel }}</h2>
+          <div class="cp-small cp-muted">{{ d.cycleName }} · {{ t().academicYear }} {{ d.targetAcademicYear }}</div>
+          <h2>{{ t().classPrefix }} {{ d.classLabel }}</h2>
           <div class="cp-chips">@for (s of d.subjects; track s) { <span class="cp-chip">{{ s }}</span> }</div>
           <div class="cp-stats facts">
-            <div class="cp-stat"><strong>{{ d.matchPercent | number: '1.0-1' }}%</strong><span>kecocokan</span></div>
-            <div class="cp-stat"><strong>P{{ d.tier }}</strong><span>{{ tierLabel[d.tier] }}</span></div>
-            <div class="cp-stat"><strong>{{ d.classSize }}</strong><span>murid di kelas ini</span></div>
+            <div class="cp-stat"><strong>{{ d.matchPercent | number: '1.0-1' }}%</strong><span>{{ t().match }}</span></div>
+            <div class="cp-stat"><strong>{{ t().tierPrefix }}{{ d.tier }}</strong><span>{{ tierLabel()[d.tier] }}</span></div>
+            <div class="cp-stat"><strong>{{ d.classSize }}</strong><span>{{ t().classSize }}</span></div>
           </div>
-          <p class="cp-small cp-muted">{{ sourceText(d.source) }} Disetujui {{ fmt(d.finalizedAt) }}.</p>
-          <a class="cp-btn cp-btn--primary" routerLink="/murid/surat">Lihat surat pernyataan</a>
+          <p class="cp-small cp-muted">{{ sourceText(d.source) }} {{ t().approved.replace('{date}', fmt(d.finalizedAt)) }}</p>
+          <a class="cp-btn cp-btn--primary" routerLink="/murid/surat">{{ t().viewLetter }}</a>
         </section>
       }
     </div>
@@ -53,7 +55,10 @@ import { FinalClass, MuridApi } from '../murid-api';
 export class KelasSaya {
   private readonly api = inject(MuridApi);
 
-  readonly tierLabel = TIER_LABEL;
+  private readonly i18n = inject(I18n);
+  /** Teks sesuai bahasa aktif. */
+  readonly t = computed(() => KELAS_SAYA_TEXT[this.i18n.lang()]);
+  readonly tierLabel = computed(() => TIER_TEXT[this.i18n.lang()]);
   readonly data = signal<FinalClass | null>(null);
   readonly pending = signal(false);
   readonly error = signal<string | null>(null);
@@ -69,10 +74,7 @@ export class KelasSaya {
   }
 
   sourceText(source: string): string {
-    if (source === 'CHOICE') return 'Sesuai kelas yang kamu pilih.';
-    if (source === 'REBALANCE') return 'Ditempatkan lewat pemerataan supaya jumlah murid tiap kelas seimbang.';
-    if (source === 'MANUAL') return 'Ditetapkan oleh waka kurikulum.';
-    return SOURCE_LABEL[source] ?? '';
+    return this.t().source[source] ?? SOURCE_TEXT[this.i18n.lang()][source] ?? '';
   }
 
   fmt(iso: string | null): string {

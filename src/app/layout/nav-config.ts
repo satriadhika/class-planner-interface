@@ -1,25 +1,48 @@
 import { Role } from '../core/auth/auth.models';
+import { Dictionary, Lang } from '../core/i18n/i18n';
 import { StageKey } from '../features/murid/murid-progress.service';
 import { IconName } from '../shared/icon/icon';
 
+/** Teks menu dalam dua bahasa. */
+export type Label = Record<Lang, string>;
+
 export interface NavItem {
-  label: string;
+  label: Label;
   path: string;
   icon: IconName;
   /** Kalau diisi, sidebar menampilkan status tahap (centang / sedang berjalan / terkunci). */
   stage?: StageKey;
   /** Aktif hanya kalau URL persis sama (untuk menu Beranda). */
   exact?: boolean;
+  /** Menu waka yang bisa dimatikan super admin per sekolah (lihat WAKA_MENUS). */
+  menu?: WakaMenu;
+  /** Hanya tampil untuk guru BK. */
+  counselorOnly?: boolean;
 }
 
+/** Menu waka yang bisa dinyalakan/dimatikan super admin. Sama dengan enum WakaMenu di backend. */
+export const WAKA_MENUS = [
+  'SIKLUS',
+  'KUESIONER',
+  'KELAS',
+  'PENEMPATAN',
+  'SURAT',
+  'DATA_MURID',
+  'DATA_GURU',
+  'MAPEL_JURUSAN',
+  'NILAI',
+  'SNBP',
+] as const;
+export type WakaMenu = (typeof WAKA_MENUS)[number];
+
 export interface NavGroup {
-  label: string;
+  label: Label;
   items: NavItem[];
 }
 
 const HELP: NavGroup = {
-  label: 'Bantuan',
-  items: [{ label: 'Panduan aplikasi', path: 'panduan', icon: 'book' }],
+  label: { id: 'Bantuan', en: 'Help' },
+  items: [{ label: { id: 'Panduan aplikasi', en: 'User guide' }, path: 'panduan', icon: 'book' }],
 };
 
 function withBase(base: string, groups: NavGroup[]): NavGroup[] {
@@ -33,14 +56,14 @@ function withBase(base: string, groups: NavGroup[]): NavGroup[] {
 export const NAV: Record<Role, NavGroup[]> = {
   MURID: withBase('/murid', [
     {
-      label: 'Tahap penjurusan',
+      label: { id: 'Tahap penjurusan', en: 'Selection steps' },
       items: [
-        { label: 'Beranda', path: '', icon: 'grid', exact: true },
-        { label: 'Kuesioner', path: 'kuesioner', icon: 'clipboard', stage: 'kuesioner' },
-        { label: 'Pilih kelas', path: 'pilih-kelas', icon: 'layers', stage: 'pilih-kelas' },
-        { label: 'Kelas saya', path: 'kelas', icon: 'award', stage: 'kelas-final' },
-        { label: 'Surat pernyataan', path: 'surat', icon: 'file-pen', stage: 'surat' },
-        { label: 'Pengumuman', path: 'pengumuman', icon: 'bell' },
+        { label: { id: 'Beranda', en: 'Home' }, path: '', icon: 'grid', exact: true },
+        { label: { id: 'Kuesioner', en: 'Questionnaire' }, path: 'kuesioner', icon: 'clipboard', stage: 'kuesioner' },
+        { label: { id: 'Pilih kelas', en: 'Choose a class' }, path: 'pilih-kelas', icon: 'layers', stage: 'pilih-kelas' },
+        { label: { id: 'Kelas saya', en: 'My class' }, path: 'kelas', icon: 'award', stage: 'kelas-final' },
+        { label: { id: 'Surat pernyataan', en: 'Statement letter' }, path: 'surat', icon: 'file-pen', stage: 'surat' },
+        { label: { id: 'Pengumuman', en: 'Announcements' }, path: 'pengumuman', icon: 'bell' },
       ],
     },
     HELP,
@@ -48,36 +71,42 @@ export const NAV: Record<Role, NavGroup[]> = {
 
   WAKA: withBase('/waka', [
     {
-      label: 'Ringkasan',
-      items: [{ label: 'Beranda', path: '', icon: 'grid', exact: true }],
+      label: { id: 'Ringkasan', en: 'Overview' },
+      items: [{ label: { id: 'Beranda', en: 'Home' }, path: '', icon: 'grid', exact: true }],
     },
     {
-      label: 'Penjurusan',
+      label: { id: 'Penjurusan', en: 'Subject selection' },
       items: [
-        { label: 'Siklus penjurusan', path: 'siklus', icon: 'repeat' },
-        { label: 'Kuesioner', path: 'kuesioner', icon: 'clipboard' },
-        { label: 'Kelas', path: 'kelas', icon: 'layers' },
-        { label: 'Penempatan murid', path: 'penempatan', icon: 'shuffle' },
-        { label: 'Surat pernyataan', path: 'surat', icon: 'file-pen' },
+        { label: { id: 'Siklus penjurusan', en: 'Selection cycles' }, path: 'siklus', icon: 'repeat', menu: 'SIKLUS' },
+        { label: { id: 'Kuesioner', en: 'Questionnaire' }, path: 'kuesioner', icon: 'clipboard', menu: 'KUESIONER' },
+        { label: { id: 'Kelas', en: 'Classes' }, path: 'kelas', icon: 'layers', menu: 'KELAS' },
+        { label: { id: 'Penempatan murid', en: 'Student placement' }, path: 'penempatan', icon: 'shuffle', menu: 'PENEMPATAN' },
+        { label: { id: 'Surat pernyataan', en: 'Statement letter' }, path: 'surat', icon: 'file-pen', menu: 'SURAT' },
       ],
     },
     {
-      label: 'Data sekolah',
+      label: { id: 'Data sekolah', en: 'School data' },
       items: [
-        { label: 'Data murid', path: 'pengguna', icon: 'users' },
-        { label: 'Mapel & jurusan', path: 'master', icon: 'database' },
-        { label: 'Nilai & minat bakat', path: 'upload', icon: 'upload' },
+        { label: { id: 'Data murid', en: 'Students' }, path: 'pengguna', icon: 'users', menu: 'DATA_MURID' },
+        { label: { id: 'Data guru', en: 'Teachers' }, path: 'guru', icon: 'user-check', menu: 'DATA_GURU' },
+        { label: { id: 'Mapel & jurusan', en: 'Subjects & majors' }, path: 'master', icon: 'database', menu: 'MAPEL_JURUSAN' },
+        { label: { id: 'Nilai & minat bakat', en: 'Grades & aptitude' }, path: 'upload', icon: 'upload', menu: 'NILAI' },
       ],
+    },
+    {
+      label: { id: 'SNBP', en: 'SNBP' },
+      items: [{ label: { id: 'Eligible SNBP', en: 'SNBP eligibility' }, path: 'snbp', icon: 'award', menu: 'SNBP' }],
     },
     HELP,
   ]),
 
   GURU: withBase('/guru', [
     {
-      label: 'Menu',
+      label: { id: 'Menu', en: 'Menu' },
       items: [
-        { label: 'Beranda', path: '', icon: 'grid', exact: true },
-        { label: 'Kelas yang saya ajar', path: 'kelas', icon: 'layers' },
+        { label: { id: 'Beranda', en: 'Home' }, path: '', icon: 'grid', exact: true },
+        { label: { id: 'Hasil penjurusan', en: 'Selection results' }, path: 'hasil', icon: 'layers' },
+        { label: { id: 'Eligible SNBP', en: 'SNBP eligibility' }, path: 'snbp', icon: 'award', counselorOnly: true },
       ],
     },
     HELP,
@@ -85,22 +114,17 @@ export const NAV: Record<Role, NavGroup[]> = {
 
   SUPER_ADMIN: withBase('/admin', [
     {
-      label: 'Admin',
-      items: [{ label: 'Sekolah', path: '', icon: 'school', exact: true }],
+      label: { id: 'Ringkasan', en: 'Overview' },
+      items: [{ label: { id: 'Beranda', en: 'Home' }, path: '', icon: 'grid', exact: true }],
+    },
+    {
+      label: { id: 'Kelola', en: 'Manage' },
+      items: [{ label: { id: 'Sekolah', en: 'Schools' }, path: 'sekolah', icon: 'school' }],
     },
   ]),
 };
 
-export const ROLE_LABEL: Record<Role, string> = {
-  SUPER_ADMIN: 'Super admin',
-  WAKA: 'Waka kurikulum',
-  GURU: 'Guru',
-  MURID: 'Murid',
-};
-
-export const ROLE_SUBTITLE: Record<Role, string> = {
-  SUPER_ADMIN: 'Kelola sekolah yang memakai Class Planner.',
-  WAKA: 'Pantau proses penjurusan sekolahmu di sini.',
-  GURU: 'Lihat kelas dan murid yang kamu ajar.',
-  MURID: 'Semoga harimu menyenangkan. Yuk lanjutkan tahap penjurusanmu.',
+export const ROLE_LABEL: Dictionary<Record<Role, string>> = {
+  id: { SUPER_ADMIN: 'Super admin', WAKA: 'Waka kurikulum', GURU: 'Guru', MURID: 'Murid' },
+  en: { SUPER_ADMIN: 'Super admin', WAKA: 'Vice principal (curriculum)', GURU: 'Teacher', MURID: 'Student' },
 };

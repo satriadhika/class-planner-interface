@@ -283,3 +283,46 @@ input {
 .panel:focus-visible {
   outline: none;
 }
+
+/* pilihan bahasa di bawah popup */
+.lang-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* catatan kecil di bawah kolom (misalnya kode sekolah opsional untuk admin) */
+.field-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted, #5b6578);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+/* pilihan murid / guru di langkah aktivasi */
+.role-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 14px;
+  font-size: 0.88rem;
+  color: var(--muted, #5b6578);
+}
+
+.role-switch button {
+  padding: 6px 14px;
+  border: 1px solid var(--border, #d9dfe8);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--brand-ink, #0f1f3d);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.role-switch button[aria-checked='true'] {
+  border-color: var(--primary, #2563eb);
+  background: var(--primary, #2563eb);
+  color: #fff;
+}

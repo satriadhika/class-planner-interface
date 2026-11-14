@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard, roleGuard } from './core/auth/auth.guards';
+import { authGuard, counselorGuard, guestGuard, roleGuard, wakaMenuGuard } from './core/auth/auth.guards';
 import { Landing } from './features/landing/landing';
 import { Shell } from './layout/shell/shell';
 import { Placeholder } from './shared/placeholder/placeholder';
@@ -76,43 +76,68 @@ export const routes: Routes = [
           },
           {
             path: 'siklus',
+            canActivate: [wakaMenuGuard('SIKLUS')],
             title: 'Siklus penjurusan — Class Planner',
             loadComponent: () => import('./features/waka/siklus/waka-siklus').then((m) => m.WakaSiklus),
           },
           {
             path: 'kuesioner',
+            canActivate: [wakaMenuGuard('KUESIONER')],
             title: 'Kuesioner — Class Planner',
             loadComponent: () => import('./features/waka/kuesioner/waka-kuesioner').then((m) => m.WakaKuesioner),
           },
           {
             path: 'kelas',
+            canActivate: [wakaMenuGuard('KELAS')],
             title: 'Kelas — Class Planner',
             loadComponent: () => import('./features/waka/kelas/waka-kelas').then((m) => m.WakaKelas),
           },
           {
             path: 'penempatan',
+            canActivate: [wakaMenuGuard('PENEMPATAN')],
             title: 'Penempatan murid — Class Planner',
             loadComponent: () => import('./features/waka/penempatan/waka-penempatan').then((m) => m.WakaPenempatan),
           },
           {
             path: 'surat',
+            canActivate: [wakaMenuGuard('SURAT')],
             title: 'Surat pernyataan — Class Planner',
             loadComponent: () => import('./features/waka/surat/waka-surat').then((m) => m.WakaSurat),
           },
           {
             path: 'pengguna',
+            canActivate: [wakaMenuGuard('DATA_MURID')],
             title: 'Data murid — Class Planner',
             loadComponent: () => import('./features/waka/pengguna/waka-pengguna').then((m) => m.WakaPengguna),
           },
           {
             path: 'master',
+            canActivate: [wakaMenuGuard('MAPEL_JURUSAN')],
             title: 'Mapel & jurusan — Class Planner',
             loadComponent: () => import('./features/waka/master/waka-master').then((m) => m.WakaMaster),
           },
           {
             path: 'upload',
+            canActivate: [wakaMenuGuard('NILAI')],
             title: 'Nilai & minat bakat — Class Planner',
             loadComponent: () => import('./features/waka/upload/waka-upload').then((m) => m.WakaUpload),
+          },
+          {
+            path: 'guru',
+            title: 'Data guru — Class Planner',
+            canActivate: [wakaMenuGuard('DATA_GURU')],
+            loadComponent: () => import('./features/waka/guru/waka-guru').then((m) => m.WakaGuru),
+          },
+          {
+            path: 'snbp',
+            title: 'Eligible SNBP — Class Planner',
+            canActivate: [wakaMenuGuard('SNBP')],
+            loadComponent: () => import('./features/snbp/snbp-page').then((m) => m.SnbpPage),
+          },
+          {
+            path: 'password',
+            title: 'Ganti password — Class Planner',
+            loadComponent: () => import('./features/account/change-password').then((m) => m.ChangePassword),
           },
           todo('panduan', 'Panduan aplikasi'),
         ],
@@ -121,13 +146,52 @@ export const routes: Routes = [
         path: 'guru',
         title: 'Guru — Class Planner',
         canActivate: [roleGuard('GURU')],
-        children: [todo('', 'Beranda guru'), todo('kelas', 'Kelas yang saya ajar'), todo('panduan', 'Panduan aplikasi')],
+        children: [
+          {
+            path: '',
+            title: 'Beranda guru — Class Planner',
+            loadComponent: () => import('./features/guru/beranda/guru-beranda').then((m) => m.GuruBeranda),
+          },
+          {
+            path: 'hasil',
+            title: 'Hasil penjurusan — Class Planner',
+            loadComponent: () => import('./features/guru/hasil/guru-hasil').then((m) => m.GuruHasil),
+          },
+          {
+            path: 'snbp',
+            title: 'Eligible SNBP — Class Planner',
+            canActivate: [counselorGuard],
+            loadComponent: () => import('./features/snbp/snbp-page').then((m) => m.SnbpPage),
+          },
+          todo('panduan', 'Panduan aplikasi'),
+        ],
       },
       {
         path: 'admin',
         title: 'Admin — Class Planner',
         canActivate: [roleGuard('SUPER_ADMIN')],
-        children: [todo('', 'Kelola sekolah')],
+        children: [
+          {
+            path: '',
+            title: 'Beranda admin — Class Planner',
+            loadComponent: () => import('./features/admin/beranda/admin-beranda').then((m) => m.AdminBeranda),
+          },
+          {
+            path: 'sekolah',
+            title: 'Sekolah — Class Planner',
+            loadComponent: () => import('./features/admin/sekolah/admin-sekolah').then((m) => m.AdminSekolah),
+          },
+          {
+            path: 'password',
+            title: 'Ganti password — Class Planner',
+            loadComponent: () => import('./features/account/change-password').then((m) => m.ChangePassword),
+          },
+          {
+            path: 'sekolah/:id',
+            title: 'Detail sekolah — Class Planner',
+            loadComponent: () => import('./features/admin/detail/admin-detail').then((m) => m.AdminDetail),
+          },
+        ],
       },
     ],
   },

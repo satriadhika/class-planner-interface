@@ -1,47 +1,97 @@
-<div class="shell" [class.sidebar-open]="sidebarOpen()">
-  <!-- ================= SIDEBAR ================= -->
-  <aside class="sidebar" id="sidebar" aria-label="Menu utama">
-    <div class="sidebar-brand">
-      <span class="brand-tile"><app-brand-mark [size]="36" /></span>
-      <span class="brand-text">
-        <strong>{{ branding.schoolName }}</strong>
-        <small>Portal {{ roleLabel() }}</small>
-      </span>
-      <button type="button" class="icon-btn mobile-only" (click)="sidebarOpen.set(false)" aria-label="Tutup menu">
-        <app-icon name="x" />
+<div class="shell" [class.nav-open]="sidebarOpen()" [class.nav-collapsed]="collapsed()">
+  <!-- ================= BAR ATAS ================= -->
+  <header class="topbar">
+    <button type="button" class="icon-btn" (click)="toggleNav()" [attr.aria-label]="t().toggleMenu" aria-controls="sidebar"
+            [attr.aria-expanded]="sidebarOpen() || !collapsed()">
+      <app-icon name="menu" [size]="22" />
+    </button>
+
+    <a class="brand" [routerLink]="home()" [attr.aria-label]="schoolName() + ' — ' + t().home">
+      <app-brand-mark [size]="38" [alt]="'Logo ' + schoolName()" />
+      <span class="brand-name">{{ schoolName() }}</span>
+    </a>
+
+    <span class="spacer"></span>
+
+    <span class="today">{{ today() }}</span>
+
+    <app-lang-switch class="lang" />
+
+    @if (user()?.role === 'MURID') {
+      <a class="icon-btn" routerLink="/murid/pengumuman" [attr.aria-label]="t().announcements">
+        <app-icon name="bell" />
+      </a>
+    }
+
+    <div class="account">
+      <button type="button" class="account-btn" (click)="toggleAccountMenu($event)" aria-haspopup="menu"
+              [attr.aria-expanded]="accountMenuOpen()">
+        <span class="avatar">{{ initials() }}</span>
+        <span class="account-name">{{ firstName() }}</span>
+        <app-icon name="chevron-down" [size]="16" />
       </button>
+
+      @if (accountMenuOpen()) {
+        <div class="account-menu" role="menu" (click)="$event.stopPropagation()">
+          <div class="account-menu-head">
+            <span class="avatar big">{{ initials() }}</span>
+            <div>
+              <strong>{{ user()?.displayName }}</strong>
+              <small>{{ roleLabel() }} · {{ user()?.school?.name ?? 'Class Planner' }}</small>
+            </div>
+          </div>
+          <!-- di HP pilihan bahasa pindah ke sini supaya bar atas tidak sesak -->
+          <div class="menu-lang"><app-lang-switch /></div>
+          @if (canChangePassword()) {
+            <a role="menuitem" [routerLink]="home() + '/password'">
+              <app-icon name="key" [size]="18" />
+              {{ t().changePassword }}
+            </a>
+          }
+          <a role="menuitem" [routerLink]="home() + '/panduan'">
+            <app-icon name="book" [size]="18" />
+            {{ t().guide }}
+          </a>
+          <button type="button" role="menuitem" class="danger" (click)="logout()">
+            <app-icon name="logout" [size]="18" />
+            {{ t().logout }}
+          </button>
+        </div>
+      }
     </div>
+  </header>
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar" [attr.aria-label]="t().mainMenu">
+
 
     <nav class="menu">
-      @for (group of nav(); track group.label) {
-        <p class="menu-label">{{ group.label }}</p>
+      <p class="menu-title">{{ menuTitle() }}</p>
+      @for (group of nav(); track group.label.id) {
+        <p class="menu-label">{{ group.label[lang()] }}</p>
         <ul>
           @for (item of group.items; track item.path) {
             <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: !!item.exact }"
-                ariaCurrentWhenActive="page"
-              >
-                <app-icon [name]="item.icon" />
-                <span class="menu-text">{{ item.label }}</span>
+              <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exact }"
+                 ariaCurrentWhenActive="page">
+                <app-icon [name]="item.icon" [size]="18" />
+                <span class="menu-text">{{ item.label[lang()] }}</span>
                 @switch (stageStatus(item.stage)) {
                   @case ('done') {
-                    <app-icon class="state done" name="check" [size]="18" />
-                    <span class="sr-only">(selesai)</span>
+                    <app-icon class="state" name="check-circle" [size]="17" />
+                    <span class="sr-only">{{ t().status.done }}</span>
                   }
                   @case ('current') {
-                    <span class="state current"></span>
-                    <span class="sr-only">(sedang berjalan)</span>
+                    <span class="state dot"></span>
+                    <span class="sr-only">{{ t().status.current }}</span>
                   }
                   @case ('locked') {
-                    <app-icon class="state locked" name="lock" [size]="15" />
-                    <span class="sr-only">(belum dibuka)</span>
+                    <app-icon class="state dim" name="lock" [size]="15" />
+                    <span class="sr-only">{{ t().status.locked }}</span>
                   }
                   @case ('missed') {
-                    <app-icon class="state missed" name="x" [size]="15" />
-                    <span class="sr-only">(terlewat)</span>
+                    <app-icon class="state dim" name="x" [size]="15" />
+                    <span class="sr-only">{{ t().status.missed }}</span>
                   }
                 }
               </a>
@@ -51,76 +101,21 @@
       }
     </nav>
 
-    <div class="help-card">
-      <app-icon name="message" [size]="22" />
-      <strong>Butuh bantuan?</strong>
-      <p>Hubungi waka kurikulum sekolahmu untuk kendala akun atau data.</p>
-    </div>
+    <section class="profile">
+      <span class="avatar">{{ initials() }}</span>
+      <div>
+        <strong>{{ user()?.displayName }}</strong>
+        <small>{{ roleLabel() }}</small>
+        @if (cycleName(); as c) { <small class="cycle">{{ c }}</small> }
+      </div>
+    </section>
   </aside>
 
-  <!-- latar gelap saat laci terbuka di HP -->
+  <!-- latar gelap saat menu terbuka di HP -->
   <div class="scrim" (click)="sidebarOpen.set(false)" aria-hidden="true"></div>
 
   <!-- ================= KONTEN ================= -->
-  <div class="main">
-    <header class="topbar">
-      <button
-        type="button"
-        class="icon-btn mobile-only"
-        (click)="sidebarOpen.set(true)"
-        aria-label="Buka menu"
-        aria-controls="sidebar"
-        [attr.aria-expanded]="sidebarOpen()"
-      >
-        <app-icon name="menu" />
-      </button>
-
-      <div class="greeting">
-        <h1>Halo, {{ firstName() }}</h1>
-        <p>{{ subtitle() }}</p>
-      </div>
-
-      <div class="topbar-actions">
-        @if (user()?.role === 'MURID') {
-          <a class="icon-btn bordered" routerLink="/murid/pengumuman" aria-label="Pengumuman">
-            <app-icon name="bell" />
-          </a>
-        }
-
-        <div class="account">
-          <button
-            type="button"
-            class="account-btn"
-            (click)="toggleAccountMenu($event)"
-            aria-haspopup="menu"
-            [attr.aria-expanded]="accountMenuOpen()"
-          >
-            <span class="avatar">{{ initials() }}</span>
-            <span class="account-text">
-              <strong>{{ user()?.displayName }}</strong>
-              <small>{{ roleLabel() }}</small>
-            </span>
-            <app-icon name="chevron-down" [size]="18" />
-          </button>
-
-          @if (accountMenuOpen()) {
-            <div class="account-menu" role="menu" (click)="$event.stopPropagation()">
-              <div class="account-menu-head">
-                <strong>{{ user()?.displayName }}</strong>
-                <small>{{ user()?.school?.name ?? roleLabel() }}</small>
-              </div>
-              <button type="button" role="menuitem" (click)="logout()">
-                <app-icon name="logout" [size]="18" />
-                Keluar
-              </button>
-            </div>
-          }
-        </div>
-      </div>
-    </header>
-
-    <main class="content">
-      <router-outlet />
-    </main>
-  </div>
+  <main class="content">
+    <router-outlet />
+  </main>
 </div>

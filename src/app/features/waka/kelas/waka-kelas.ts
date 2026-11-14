@@ -3,11 +3,13 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { problemMessage } from '../../../core/api/problem';
-import { CLASS_TYPE_LABEL, TIER_LABEL } from '../../../shared/labels/labels';
+import { problemMessage, translateMessage } from '../../../core/api/problem';
+import { I18n } from '../../../core/i18n/i18n';
+import { CLASS_TYPE_TEXT, TIER_TEXT } from '../../../shared/labels/labels';
 import { CycleBar } from '../cycle-bar';
 import { CycleStore } from '../cycle-store';
 import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
+import { KELAS_TEXT } from './waka-kelas.i18n';
 
 /** Simulasi kombinasi mapel per kelas, simpan sebagai kelas resmi, dan buka pemilihan kelas. */
 @Component({
@@ -17,8 +19,8 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
     <div class="cp-page">
       <header class="cp-head">
         <div>
-          <h1>Kelas</h1>
-          <p>Sistem mencari kombinasi 5 mapel per kelas yang paling banyak memenuhi jurusan murid, lalu membagi murid secara rata.</p>
+          <h1>{{ t().title }}</h1>
+          <p>{{ t().intro }}</p>
         </div>
       </header>
 
@@ -31,8 +33,8 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
       @if (store.detail(); as d) {
         @if (beforeSurveyClosed()) {
           <div class="cp-alert cp-alert--warn">
-            Kelas baru bisa dibentuk setelah kuesioner ditutup ({{ d.stats.questionnaireSubmitted }}/{{ d.stats.students }} murid sudah mengirim).
-            <a routerLink="/waka/siklus">Atur siklus</a>
+            {{ t().beforeClosed.replace('{done}', '' + d.stats.questionnaireSubmitted).replace('{total}', '' + d.stats.students) }}
+            <a routerLink="/waka/siklus">{{ t().manageCycle }}</a>
           </div>
         }
 
@@ -41,33 +43,33 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
           <section class="cp-card">
             <div class="cp-row">
               <div>
-                <h2>Kelas resmi</h2>
-                <p class="cp-sub">{{ saved().length }} kelas disimpan.</p>
+                <h2>{{ t().officialTitle }}</h2>
+                <p class="cp-sub">{{ t().savedCount.replace('{n}', '' + saved().length) }}</p>
               </div>
               <span class="cp-spacer"></span>
               @if (d.cycle.status === 'CLASSES_GENERATED') {
                 @if (confirmCancel()) {
-                  <span class="cp-small">Batalkan kelas yang disimpan?</span>
-                  <button class="cp-btn cp-btn--danger cp-btn--sm" type="button" (click)="cancelClasses()">Ya, batalkan</button>
-                  <button class="cp-btn cp-btn--sm" type="button" (click)="confirmCancel.set(false)">Tidak</button>
+                  <span class="cp-small">{{ t().cancelQ }}</span>
+                  <button class="cp-btn cp-btn--danger cp-btn--sm" type="button" (click)="cancelClasses()">{{ t().yesCancel }}</button>
+                  <button class="cp-btn cp-btn--sm" type="button" (click)="confirmCancel.set(false)">{{ t().no }}</button>
                 } @else {
-                  <button class="cp-btn cp-btn--danger" type="button" (click)="confirmCancel.set(true)">Batalkan kelas</button>
+                  <button class="cp-btn cp-btn--danger" type="button" (click)="confirmCancel.set(true)">{{ t().cancelClasses }}</button>
                 }
-                <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="openSelection()">Buka pemilihan kelas</button>
+                <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="openSelection()">{{ t().openSelection }}</button>
               }
             </div>
             <div class="classes">
               @for (c of saved(); track c.id) {
                 <article class="class-card">
                   <header class="cp-row">
-                    <h3>Kelas {{ c.label }}</h3>
-                    <span class="cp-badge">{{ typeLabel[c.type] }}</span>
+                    <h3>{{ t().classPrefix }} {{ c.label }}</h3>
+                    <span class="cp-badge">{{ typeLabel()[c.type] }}</span>
                   </header>
                   <div class="cp-chips">
                     @for (s of c.subjectNames; track s) { <span class="cp-chip">{{ s }}</span> }
                   </div>
                   @if (d.cycle.status !== 'CLASSES_GENERATED') {
-                    <p class="cp-small cp-muted counts">Dipilih {{ c.choiceCount }} murid · ditempatkan {{ c.placementCount }}</p>
+                    <p class="cp-small cp-muted counts">{{ t().counts.replace('{chosen}', '' + c.choiceCount).replace('{placed}', '' + c.placementCount) }}</p>
                   }
                 </article>
               }
@@ -78,23 +80,22 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
         <!-- simulasi -->
         @if (canSimulate()) {
           <section class="cp-card">
-            <h2>Simulasi pembentukan kelas</h2>
+            <h2>{{ t().simTitle }}</h2>
             <p class="cp-sub">
-              Kosongkan isian untuk memakai pengaturan siklus ({{ d.stats.students }} murid,
-              {{ d.classCount ?? 'otomatis' }} kelas, isi rata).
-              Ketentuan mapel: {{ d.subjectRules.length }} mapel, {{ d.pairRules.length }} aturan pasangan
-              (<a routerLink="/waka/siklus">ubah</a>).
+              {{ t().simHint.replace('{students}', '' + d.stats.students).replace('{classes}', '' + (d.classCount ?? t().auto))
+                  .replace('{rules}', '' + d.subjectRules.length).replace('{pairs}', '' + d.pairRules.length) }}
+              (<a routerLink="/waka/siklus">{{ t().change }}</a>).
             </p>
             <form class="cp-form" [formGroup]="form" (ngSubmit)="simulate()">
-              <label class="cp-field"><span>Jumlah kelas</span><input type="number" min="1" formControlName="classCount" placeholder="otomatis" /></label>
-              <label class="cp-field"><span>Minimal murid / kelas</span><input type="number" min="1" formControlName="minClassSize" placeholder="rata" /></label>
-              <label class="cp-field"><span>Maksimal murid / kelas</span><input type="number" min="1" formControlName="maxClassSize" placeholder="rata" /></label>
+              <label class="cp-field"><span>{{ t().classCount }}</span><input type="number" min="1" formControlName="classCount" [placeholder]="t().auto" /></label>
+              <label class="cp-field"><span>{{ t().minSize }}</span><input type="number" min="1" formControlName="minClassSize" [placeholder]="t().even" /></label>
+              <label class="cp-field"><span>{{ t().maxSize }}</span><input type="number" min="1" formControlName="maxClassSize" [placeholder]="t().even" /></label>
               <label class="cp-field check"><input type="checkbox" formControlName="requireOneMajor2Subject" />
-                <span>Wajib minimal 1 mapel jurusan 2</span></label>
+                <span>{{ t().requireMajor2 }}</span></label>
               <div class="cp-field cp-field--full">
                 <div class="cp-row">
-                  <button class="cp-btn cp-btn--primary" type="submit" [disabled]="busy()">{{ busy() ? 'Menghitung…' : 'Jalankan simulasi' }}</button>
-                  <span class="cp-small cp-muted">Biasanya selesai dalam beberapa detik (maks. 30 detik).</span>
+                  <button class="cp-btn cp-btn--primary" type="submit" [disabled]="busy()">{{ busy() ? t().computing : t().runSim }}</button>
+                  <span class="cp-small cp-muted">{{ t().simTime }}</span>
                 </div>
               </div>
             </form>
@@ -103,25 +104,25 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
 
         @if (plan(); as p) {
           @if (p.status === 'INFEASIBLE' || p.status === 'NO_SOLUTION_IN_TIME') {
-            <div class="cp-alert cp-alert--error">{{ p.message }}</div>
+            <div class="cp-alert cp-alert--error">{{ tr(p.message) }}</div>
           } @else {
             <section class="cp-card">
               <div class="cp-row">
                 <div>
-                  <h2>Hasil simulasi</h2>
-                  <p class="cp-sub">{{ p.classCount }} kelas · {{ p.minClassSize }}–{{ p.maxClassSize }} murid per kelas</p>
+                  <h2>{{ t().resultTitle }}</h2>
+                  <p class="cp-sub">{{ t().resultSub.replace('{classes}', '' + p.classCount).replace('{min}', '' + p.minClassSize).replace('{max}', '' + p.maxClassSize) }}</p>
                 </div>
                 <span class="cp-spacer"></span>
                 <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="save()">
-                  {{ saved().length ? 'Ganti kelas resmi dengan hasil ini' : 'Simpan sebagai kelas resmi' }}
+                  {{ saved().length ? t().replaceOfficial : t().saveOfficial }}
                 </button>
               </div>
 
               <div class="cp-stats tiers">
-                @for (t of [1, 2, 3, 4, 5]; track t) {
+                @for (tier of [1, 2, 3, 4, 5]; track tier) {
                   <div class="cp-stat">
-                    <strong>{{ p.studentsPerTier[t] ?? 0 }}</strong>
-                    <span><span class="cp-badge" [class]="'cp-badge cp-badge--tier' + t">P{{ t }}</span> {{ tierLabel[t] }}</span>
+                    <strong>{{ p.studentsPerTier[tier] ?? 0 }}</strong>
+                    <span><span class="cp-badge" [class]="'cp-badge cp-badge--tier' + tier">P{{ tier }}</span> {{ tierLabel()[tier] }}</span>
                   </div>
                 }
               </div>
@@ -130,16 +131,16 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
                 @for (c of p.classes; track c.label) {
                   <article class="class-card">
                     <header class="cp-row">
-                      <h3>Kelas {{ c.label }}</h3>
-                      <span class="cp-badge">{{ typeLabel[c.type] }}</span>
+                      <h3>{{ t().classPrefix }} {{ c.label }}</h3>
+                      <span class="cp-badge">{{ typeLabel()[c.type] }}</span>
                       <span class="cp-spacer"></span>
-                      <span class="cp-small"><strong>{{ c.size }}</strong> murid · rata-rata {{ c.averageMatchPercent | number: '1.1-1' }}%</span>
+                      <span class="cp-small"><strong>{{ c.size }}</strong> {{ t().students }} · {{ t().average }} {{ c.averageMatchPercent | number: '1.1-1' }}%</span>
                     </header>
                     <div class="cp-chips">
                       @for (s of c.subjects; track s) { <span class="cp-chip">{{ s }}</span> }
                     </div>
                     <button class="cp-btn cp-btn--ghost cp-btn--sm" type="button" (click)="toggle(c.label)">
-                      {{ expanded().has(c.label) ? 'Sembunyikan murid' : 'Lihat murid' }}
+                      {{ expanded().has(c.label) ? t().hideStudents : t().showStudents }}
                     </button>
                     @if (expanded().has(c.label)) {
                       <ul class="members">
@@ -157,10 +158,10 @@ import { ClassInfo, ClassPlanResult, WakaApi } from '../waka-api';
               </div>
 
               @if (p.studentsWithGaps.length > 0) {
-                <h3 class="gap-title">Murid yang tidak di prioritas 1 ({{ p.studentsWithGaps.length }})</h3>
+                <h3 class="gap-title">{{ t().gapsTitle.replace('{n}', '' + p.studentsWithGaps.length) }}</h3>
                 <div class="cp-table-wrap">
                   <table class="cp-table">
-                    <thead><tr><th>Murid</th><th>Kelas</th><th>Prioritas</th><th>Kurang mapel J1</th><th>Kurang mapel J2</th></tr></thead>
+                    <thead><tr><th>{{ t().colStudent }}</th><th>{{ t().colClass }}</th><th>{{ t().colPriority }}</th><th>{{ t().colMissing1 }}</th><th>{{ t().colMissing2 }}</th></tr></thead>
                     <tbody>
                       @for (g of p.studentsWithGaps; track g.studentId) {
                         <tr>
@@ -224,8 +225,11 @@ export class WakaKelas {
   private readonly api = inject(WakaApi);
   private readonly fb = inject(FormBuilder);
 
-  readonly typeLabel = CLASS_TYPE_LABEL;
-  readonly tierLabel = TIER_LABEL;
+  private readonly i18n = inject(I18n);
+  /** Teks sesuai bahasa aktif. */
+  readonly t = computed(() => KELAS_TEXT[this.i18n.lang()]);
+  readonly typeLabel = computed(() => CLASS_TYPE_TEXT[this.i18n.lang()]);
+  readonly tierLabel = computed(() => TIER_TEXT[this.i18n.lang()]);
 
   readonly saved = signal<ClassInfo[]>([]);
   readonly plan = signal<ClassPlanResult | null>(null);
@@ -289,7 +293,7 @@ export class WakaKelas {
         this.busy.set(false);
         this.saved.set(classes);
         this.plan.set(null);
-        this.message.set({ text: 'Kelas resmi disimpan. Langkah berikutnya: buka pemilihan kelas.', error: false });
+        this.message.set({ text: this.t().saved, error: false });
         this.store.refresh().subscribe();
       },
       error: (e: unknown) => this.fail(e),
@@ -304,7 +308,7 @@ export class WakaKelas {
       next: (d) => {
         this.busy.set(false);
         this.store.setDetail(d);
-        this.message.set({ text: 'Pemilihan kelas dibuka. Murid sekarang bisa memilih kelas.', error: false });
+        this.message.set({ text: this.t().opened, error: false });
       },
       error: (e: unknown) => this.fail(e),
     });
@@ -317,11 +321,17 @@ export class WakaKelas {
       next: () => {
         this.saved.set([]);
         this.confirmCancel.set(false);
-        this.message.set({ text: 'Kelas dibatalkan. Silakan jalankan simulasi lagi.', error: false });
+        this.message.set({ text: this.t().cancelled, error: false });
         this.store.refresh().subscribe();
       },
       error: (e: unknown) => this.fail(e),
     });
+  }
+
+  /** Pesan solver dari backend, diterjemahkan sesuai bahasa. */
+  tr(message: string | null): string {
+    this.i18n.lang();
+    return message ? translateMessage(message) : '';
   }
 
   toggle(label: string): void {

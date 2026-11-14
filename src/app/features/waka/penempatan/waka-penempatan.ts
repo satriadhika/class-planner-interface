@@ -3,11 +3,13 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
-import { problemMessage } from '../../../core/api/problem';
-import { CLASS_TYPE_LABEL, SOURCE_LABEL, TIER_LABEL, fmtDateTime } from '../../../shared/labels/labels';
+import { problemMessage, translateMessage } from '../../../core/api/problem';
+import { I18n } from '../../../core/i18n/i18n';
+import { CLASS_TYPE_TEXT, SOURCE_TEXT, TIER_TEXT, fmtDateTime } from '../../../shared/labels/labels';
 import { CycleBar } from '../cycle-bar';
 import { CycleStore } from '../cycle-store';
 import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api';
+import { PENEMPATAN_TEXT } from './waka-penempatan.i18n';
 
 /** Pemilihan kelas → pemerataan → pindah manual → setujui. */
 @Component({
@@ -17,8 +19,8 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
     <div class="cp-page">
       <header class="cp-head">
         <div>
-          <h1>Penempatan murid</h1>
-          <p>Tutup pemilihan kelas, jalankan pemerataan, periksa hasilnya, lalu setujui. Setelah disetujui, hasil tidak bisa diubah.</p>
+          <h1>{{ t().title }}</h1>
+          <p>{{ t().intro }}</p>
         </div>
       </header>
 
@@ -33,17 +35,16 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
           <!-- ===================== pemilihan berjalan ===================== -->
           @case ('SELECTION_OPEN') {
             <section class="cp-card">
-              <h2>Pemilihan kelas sedang berjalan</h2>
-              <p class="cp-sub">{{ d.stats.choices }} dari {{ d.stats.students }} murid sudah memilih. Ditutup: {{ fmt(d.cycle.selectionCloseAt) }}.
-                Murid yang tidak memilih akan ditempatkan di kelas yang paling cocok.</p>
+              <h2>{{ t().runningTitle }}</h2>
+              <p class="cp-sub">{{ t().runningSub.replace('{chosen}', '' + d.stats.choices).replace('{total}', '' + d.stats.students).replace('{date}', fmt(d.cycle.selectionCloseAt)) }}</p>
               <div class="cp-bar"><i [style.width.%]="pct(d.stats.choices, d.stats.students)"></i></div>
               <div class="choice-grid">
                 @for (c of classes(); track c.id) {
-                  <div class="cp-stat"><strong>{{ c.choiceCount }}</strong><span>memilih kelas {{ c.label }}</span></div>
+                  <div class="cp-stat"><strong>{{ c.choiceCount }}</strong><span>{{ t().choseClass.replace('{label}', c.label) }}</span></div>
                 }
               </div>
               <div class="cp-row actions">
-                <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="status('SELECTION_CLOSED')">Tutup pemilihan kelas</button>
+                <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="status('SELECTION_CLOSED')">{{ t().closeSelection }}</button>
               </div>
             </section>
           }
@@ -51,20 +52,17 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
           <!-- ===================== siap pemerataan ===================== -->
           @case ('SELECTION_CLOSED') {
             <section class="cp-card">
-              <h2>Pemerataan kelas</h2>
-              <p class="cp-sub">
-                Pilihan murid diutamakan. Murid dipindah hanya kalau kelasnya kelebihan, ke kelas yang tetap memuat mapel jurusan 1
-                dengan kecocokan di atas batas. Turun prioritas lebih dihindari daripada jumlah murid yang dipindah.
-              </p>
+              <h2>{{ t().balanceTitle }}</h2>
+              <p class="cp-sub">{{ t().balanceHint }}</p>
               <div class="cp-row">
                 <label class="cp-field min">
-                  <span>Batas kecocokan minimal (%)</span>
+                  <span>{{ t().minMatch }}</span>
                   <input type="number" min="0" max="100" [value]="minMatch()" (input)="minMatch.set(+$any($event.target).value)" />
                 </label>
                 <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="preview()">
-                  {{ busy() ? 'Menghitung…' : 'Hitung pemerataan' }}
+                  {{ busy() ? t().computing : t().computeBalance }}
                 </button>
-                <button class="cp-btn" type="button" [disabled]="busy()" (click)="status('SELECTION_OPEN')">Buka lagi pemilihan</button>
+                <button class="cp-btn" type="button" [disabled]="busy()" (click)="status('SELECTION_OPEN')">{{ t().reopen }}</button>
               </div>
             </section>
 
@@ -72,23 +70,23 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
               <section class="cp-card">
                 <div class="cp-row">
                   <div>
-                    <h2>Hasil pemerataan</h2>
-                    <p class="cp-sub">{{ r.moves.length }} murid dipindah.</p>
+                    <h2>{{ t().balanceResult }}</h2>
+                    <p class="cp-sub">{{ t().moved.replace('{n}', '' + r.moves.length) }}</p>
                   </div>
                   <span class="cp-spacer"></span>
                   @if (r.status !== 'INFEASIBLE' && r.status !== 'NO_SOLUTION_IN_TIME') {
-                    <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="apply()">Terapkan hasil ini</button>
+                    <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="apply()">{{ t().applyResult }}</button>
                   }
                 </div>
-                @for (p of r.problems; track p) { <div class="cp-alert cp-alert--error">{{ p }}</div> }
-                @for (w of r.warnings; track w) { <div class="cp-alert cp-alert--warn">{{ w }}</div> }
+                @for (p of r.problems; track p) { <div class="cp-alert cp-alert--error">{{ tr(p) }}</div> }
+                @for (w of r.warnings; track w) { <div class="cp-alert cp-alert--warn">{{ tr(w) }}</div> }
 
                 <div class="cp-table-wrap sizes">
                   <table class="cp-table">
-                    <thead><tr><th>Kelas</th><th class="num">Sebelum</th><th class="num">Sesudah</th></tr></thead>
+                    <thead><tr><th>{{ t().colClass }}</th><th class="num">{{ t().colBefore }}</th><th class="num">{{ t().colAfter }}</th></tr></thead>
                     <tbody>
                       @for (c of r.classes; track c.label) {
-                        <tr><td>Kelas {{ c.label }}</td><td class="num">{{ c.before }}</td><td class="num"><strong>{{ c.after }}</strong></td></tr>
+                        <tr><td>{{ t().classPrefix }} {{ c.label }}</td><td class="num">{{ c.before }}</td><td class="num"><strong>{{ c.after }}</strong></td></tr>
                       }
                     </tbody>
                   </table>
@@ -97,7 +95,7 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
                 @if (r.moves.length > 0) {
                   <div class="cp-table-wrap">
                     <table class="cp-table">
-                      <thead><tr><th>Murid</th><th>Dari</th><th>Ke</th><th class="num">Kecocokan</th><th>Prioritas</th></tr></thead>
+                      <thead><tr><th>{{ t().colStudent }}</th><th>{{ t().colFrom }}</th><th>{{ t().colTo }}</th><th class="num">{{ t().colMatch }}</th><th>{{ t().colPriority }}</th></tr></thead>
                       <tbody>
                         @for (m of r.moves; track m.studentId) {
                           <tr>
@@ -121,13 +119,13 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
             <ng-container [ngTemplateOutlet]="boardTpl" />
           }
           @case ('FINALIZED') {
-            <div class="cp-alert cp-alert--ok">Hasil kelas sudah disetujui pada {{ fmt(d.cycle.finalizedAt) }}. Murid sudah bisa melihat kelas final dan surat pernyataan.</div>
+            <div class="cp-alert cp-alert--ok">{{ t().finalizedAt.replace('{date}', fmt(d.cycle.finalizedAt)) }}</div>
             <ng-container [ngTemplateOutlet]="boardTpl" />
           }
           @default {
             <div class="cp-empty">
-              Penempatan dimulai setelah kelas disimpan dan pemilihan kelas dibuka.
-              <a routerLink="/waka/kelas">Ke halaman Kelas</a>
+              {{ t().notStarted }}
+              <a routerLink="/waka/kelas">{{ t().toClasses }}</a>
             </div>
           }
         }
@@ -139,18 +137,18 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
         <section class="cp-card">
           <div class="cp-row">
             <div>
-              <h2>Hasil penempatan</h2>
-              <p class="cp-sub">Ukuran rata: {{ b.minSize }}–{{ b.maxSize }} murid per kelas. {{ locked() ? '' : 'Ganti kelas murid lewat kolom "Pindah ke".' }}</p>
+              <h2>{{ t().boardTitle }}</h2>
+              <p class="cp-sub">{{ t().boardSub.replace('{min}', '' + b.minSize).replace('{max}', '' + b.maxSize) }} {{ locked() ? '' : t().boardMoveHint }}</p>
             </div>
             <span class="cp-spacer"></span>
             @if (!locked()) {
-              <button class="cp-btn" type="button" [disabled]="busy()" (click)="status('SELECTION_CLOSED')">Batalkan pemerataan</button>
+              <button class="cp-btn" type="button" [disabled]="busy()" (click)="status('SELECTION_CLOSED')">{{ t().cancelBalance }}</button>
               @if (confirmFinal()) {
-                <span class="cp-small">Setujui? Hasil tidak bisa diubah lagi.</span>
-                <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="finalize()">Ya, setujui</button>
-                <button class="cp-btn" type="button" (click)="confirmFinal.set(false)">Batal</button>
+                <span class="cp-small">{{ t().approveQ }}</span>
+                <button class="cp-btn cp-btn--primary" type="button" [disabled]="busy()" (click)="finalize()">{{ t().yesApprove }}</button>
+                <button class="cp-btn" type="button" (click)="confirmFinal.set(false)">{{ t().cancel }}</button>
               } @else {
-                <button class="cp-btn cp-btn--primary" type="button" (click)="confirmFinal.set(true)">Setujui hasil</button>
+                <button class="cp-btn cp-btn--primary" type="button" (click)="confirmFinal.set(true)">{{ t().approve }}</button>
               }
             }
           </div>
@@ -158,7 +156,7 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
           <div class="cp-tabs class-tabs" role="tablist">
             @for (c of b.classes; track c.classId) {
               <button type="button" role="tab" [attr.aria-selected]="active() === c.classId" (click)="active.set(c.classId)">
-                Kelas {{ c.label }}
+                {{ t().classPrefix }} {{ c.label }}
                 <span class="size" [class.bad]="c.size < b.minSize || c.size > b.maxSize">{{ c.size }}</span>
               </button>
             }
@@ -167,32 +165,32 @@ import { ClassInfo, PlacementBoard, RebalanceResult, WakaApi } from '../waka-api
           @for (c of b.classes; track c.classId) {
             @if (active() === c.classId) {
               <div class="cp-row class-info">
-                <span class="cp-badge">{{ typeLabel[c.type] }}</span>
+                <span class="cp-badge">{{ typeLabel()[c.type] }}</span>
                 <div class="cp-chips">@for (s of c.subjectNames; track s) { <span class="cp-chip">{{ s }}</span> }</div>
                 <span class="cp-spacer"></span>
-                <span class="cp-small">Rata-rata kecocokan <strong>{{ c.averageMatchPercent | number: '1.1-1' }}%</strong></span>
+                <span class="cp-small">{{ t().avgMatch }} <strong>{{ c.averageMatchPercent | number: '1.1-1' }}%</strong></span>
               </div>
               <div class="cp-table-wrap">
                 <table class="cp-table">
                   <thead>
-                    <tr><th>Murid</th><th>Kelas asal</th><th>Pilihan</th><th>Sumber</th><th>Prioritas</th><th class="num">Kecocokan</th>
-                      @if (!locked()) { <th>Pindah ke</th> }</tr>
+                    <tr><th>{{ t().colStudent }}</th><th>{{ t().colOrigin }}</th><th>{{ t().colChoice }}</th><th>{{ t().colSource }}</th><th>{{ t().colPriority }}</th><th class="num">{{ t().colMatch }}</th>
+                      @if (!locked()) { <th>{{ t().colMoveTo }}</th> }</tr>
                   </thead>
                   <tbody>
                     @for (s of c.students; track s.studentId) {
                       <tr>
                         <td><strong>{{ s.fullName }}</strong><div class="cp-small cp-muted">{{ s.studentNumber }}</div></td>
                         <td>{{ s.fromClassLabel ?? '-' }}</td>
-                        <td>{{ s.chosenClassLabel ?? 'tidak memilih' }}</td>
-                        <td><span class="cp-badge" [class.cp-badge--primary]="s.source === 'MANUAL'">{{ sourceLabel[s.source] }}</span></td>
-                        <td><span [class]="'cp-badge cp-badge--tier' + s.tier" [title]="tierLabel[s.tier]">P{{ s.tier }}</span></td>
+                        <td>{{ s.chosenClassLabel ?? t().noChoice }}</td>
+                        <td><span class="cp-badge" [class.cp-badge--primary]="s.source === 'MANUAL'">{{ sourceLabel()[s.source] }}</span></td>
+                        <td><span [class]="'cp-badge cp-badge--tier' + s.tier" [title]="tierLabel()[s.tier]">P{{ s.tier }}</span></td>
                         <td class="num">{{ s.matchPercent | number: '1.1-1' }}%</td>
                         @if (!locked()) {
                           <td>
                             @if (s.locked) {
-                              <span class="cp-small cp-muted">Terkunci</span>
+                              <span class="cp-small cp-muted">{{ t().lockedStudent }}</span>
                             } @else {
-                              <select (change)="move(s.studentId, $any($event.target).value)" [attr.aria-label]="'Pindahkan ' + s.fullName">
+                              <select (change)="move(s.studentId, $any($event.target).value)" [attr.aria-label]="t().moveAria.replace('{name}', s.fullName)">
                                 <option value="" selected>—</option>
                                 @for (o of s.options; track o.classId) {
                                   @if (o.classId !== c.classId) {
@@ -240,9 +238,12 @@ export class WakaPenempatan {
   readonly store = inject(CycleStore);
   private readonly api = inject(WakaApi);
 
-  readonly typeLabel = CLASS_TYPE_LABEL;
-  readonly tierLabel = TIER_LABEL;
-  readonly sourceLabel = SOURCE_LABEL;
+  private readonly i18n = inject(I18n);
+  /** Teks sesuai bahasa aktif. */
+  readonly t = computed(() => PENEMPATAN_TEXT[this.i18n.lang()]);
+  readonly typeLabel = computed(() => CLASS_TYPE_TEXT[this.i18n.lang()]);
+  readonly tierLabel = computed(() => TIER_TEXT[this.i18n.lang()]);
+  readonly sourceLabel = computed(() => SOURCE_TEXT[this.i18n.lang()]);
 
   readonly classes = signal<ClassInfo[]>([]);
   readonly rebalance = signal<RebalanceResult | null>(null);
@@ -299,7 +300,7 @@ export class WakaPenempatan {
     const id = this.store.selectedId();
     if (!id) return;
     this.call(this.api.rebalanceApply(id, this.minMatch()), () => {
-      this.message.set({ text: 'Pemerataan diterapkan. Periksa hasilnya lalu setujui.', error: false });
+      this.message.set({ text: this.t().applied, error: false });
       this.store.refresh().subscribe(() => this.reload());
     });
   }
@@ -309,7 +310,7 @@ export class WakaPenempatan {
     if (!id || !classId) return;
     this.call(this.api.movePlacement(id, studentId, Number(classId)), (b) => {
       this.setBoard(b);
-      this.message.set({ text: 'Murid dipindahkan.', error: false });
+      this.message.set({ text: this.t().movedOne, error: false });
     });
   }
 
@@ -317,7 +318,7 @@ export class WakaPenempatan {
     const id = this.store.selectedId();
     if (!id) return;
     this.call(this.api.finalize(id), () => {
-      this.message.set({ text: 'Hasil kelas disetujui. Murid sekarang bisa melihat kelas final dan surat pernyataan.', error: false });
+      this.message.set({ text: this.t().approved, error: false });
       this.store.refresh().subscribe(() => this.reload());
     });
   }
@@ -327,7 +328,14 @@ export class WakaPenempatan {
   }
 
   fmt(iso: string | null): string {
+    this.i18n.lang();
     return fmtDateTime(iso);
+  }
+
+  /** Pesan pemerataan dari backend, diterjemahkan sesuai bahasa. */
+  tr(message: string): string {
+    this.i18n.lang();
+    return translateMessage(message);
   }
 
   private setBoard(b: PlacementBoard): void {

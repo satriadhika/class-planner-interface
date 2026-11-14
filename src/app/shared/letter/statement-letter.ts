@@ -1,9 +1,19 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, signal } from '@angular/core';
 
 import { BRANDING } from '../../core/config/branding';
+import { LetterTemplate, LetterValues, Segment, parseLetter, renderLetterText } from './letter-template';
 
 export interface LetterData {
-  school: { name: string; address: string | null; phone: string | null; email: string | null; principalName: string | null };
+  school: {
+    name: string;
+    address: string | null;
+    phone: string | null;
+    email: string | null;
+    principalName: string | null;
+    /** Isi surat yang diatur waka (JSON); kosong = isi bawaan */
+    letterTemplate?: string | null;
+  };
   student: { fullName: string; studentNumber: string; nisn: string | null; currentClassLabel: string | null };
   cycleName: string;
   targetAcademicYear: string;
@@ -14,10 +24,26 @@ export interface LetterData {
   finalizedAt: string | null;
 }
 
-/** Surat pernyataan pemilihan mapel, ukuran A4. Dicetak lewat window.print(). */
+type Rendered = Record<keyof Pick<LetterTemplate,
+  'title' | 'subtitle' | 'opening' | 'body' | 'closing' | 'signParent' | 'signStudent' | 'signPrincipal'>, Segment[][]>;
+
+/**
+ * Surat pernyataan pemilihan mapel, ukuran A4. Dicetak lewat window.print().
+ * Isi teks mengikuti template sekolah (lihat letter-template.ts); kop, data murid, dan daftar mapel tetap otomatis.
+ * Surat selalu berbahasa Indonesia karena dokumen resmi sekolah.
+ */
 @Component({
   selector: 'app-statement-letter',
   template: `
+    <ng-template #rich let-lines>
+      @for (line of lines; track $index; let last = $last) {
+        @for (seg of line; track $index) {
+          @if (seg.bold) { <strong>{{ seg.text }}</strong> } @else { {{ seg.text }} }
+        }
+        @if (!last) { <br /> }
+      }
+    </ng-template>
+
     <article class="letter">
       <header class="kop">
         @if (logo && !logoFailed()) { <img [src]="logo" alt="" (error)="logoFailed.set(true)" /> }
@@ -32,10 +58,13 @@ export interface LetterData {
         </div>
       </header>
 
-      <h1>SURAT PERNYATAAN<br />PEMILIHAN MATA PELAJARAN PILIHAN</h1>
-      <p class="center">Tahun Ajaran {{ data().targetAcademicYear }}</p>
+      @let r = text();
+      <h1><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.title }" /></h1>
+      @if (tpl().subtitle) {
+        <p class="center"><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.subtitle }" /></p>
+      }
 
-      <p>Yang bertanda tangan di bawah ini:</p>
+      @if (tpl().opening) { <p><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.opening }" /></p> }
       <table class="id">
         <tr><td>Nama murid</td><td>:</td><td>{{ data().student.fullName }}</td></tr>
         <tr><td>NIS / NISN</td><td>:</td><td>{{ data().student.studentNumber }} / {{ data().student.nisn ?? '-' }}</td></tr>
@@ -44,40 +73,39 @@ export interface LetterData {
         <tr><td>Rencana jurusan 2</td><td>:</td><td>{{ data().major2 ?? '-' }}</td></tr>
       </table>
 
-      <p>
-        menyatakan bersedia mengikuti pembelajaran di <strong>Kelas {{ data().classLabel }}</strong> pada kelas 11
-        dengan mata pelajaran pilihan sebagai berikut:
-      </p>
+      @if (tpl().body) { <p><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.body }" /></p> }
       <ol class="subjects">
         @for (s of data().subjects; track s) { <li>{{ s }}</li> }
       </ol>
-      <p>
-        Mata pelajaran pilihan tersebut akan diikuti sampai kelas 12. Surat pernyataan ini dibuat dengan sadar dan
-        atas persetujuan orang tua/wali.
-      </p>
+      @if (tpl().closing) { <p><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.closing }" /></p> }
 
       <p class="place">{{ city() }}, {{ today }}</p>
-      <div class="signs">
+      <div class="signs" [class.single]="!tpl().showParent">
+        @if (tpl().showParent) {
+          <div>
+            <p><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.signParent }" /></p>
+            <span class="line"></span>
+            <p class="name">(............................................)</p>
+          </div>
+        }
         <div>
-          <p>Mengetahui,<br />Orang tua/wali</p>
-          <span class="line"></span>
-          <p class="name">(............................................)</p>
-        </div>
-        <div>
-          <p><br />Murid</p>
+          <p>@for (pad of studentPad(); track $index) { <br /> }<ng-container *ngTemplateOutlet="rich; context: { $implicit: r.signStudent }" /></p>
           <span class="line"></span>
           <p class="name">{{ data().student.fullName }}</p>
         </div>
       </div>
-      <div class="signs single">
-        <div>
-          <p>Mengetahui,<br />Kepala Sekolah</p>
-          <span class="line"></span>
-          <p class="name">{{ data().school.principalName ?? '(............................................)' }}</p>
+      @if (tpl().showPrincipal) {
+        <div class="signs single principal">
+          <div>
+            <p><ng-container *ngTemplateOutlet="rich; context: { $implicit: r.signPrincipal }" /></p>
+            <span class="line"></span>
+            <p class="name">{{ data().school.principalName ?? '(............................................)' }}</p>
+          </div>
         </div>
-      </div>
+      }
     </article>
   `,
+  imports: [NgTemplateOutlet],
   styles: `
     :host { display: block; }
     .letter {
@@ -116,7 +144,8 @@ export interface LetterData {
     .subjects { margin: 4px 0 10px 18px; }
     .place { text-align: right; margin-top: 24px; }
     .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; text-align: center; }
-    .signs.single { grid-template-columns: 1fr; justify-items: center; margin-top: 18px; }
+    .signs.single { grid-template-columns: 1fr; justify-items: center; }
+    .signs.principal { margin-top: 18px; }
     .signs p { margin: 0; }
     .line { display: block; height: 64px; }
     .name { font-weight: 600; }
@@ -130,15 +159,60 @@ export interface LetterData {
 })
 export class StatementLetter {
   readonly data = input.required<LetterData>();
+  /** Template yang sedang diedit (pratinjau di halaman waka). Kalau kosong, pakai template dari data sekolah. */
+  readonly template = input<LetterTemplate | null>(null);
 
   readonly logo = BRANDING.logoUrl;
   readonly logoFailed = signal(false);
   readonly today = new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date());
 
-  /** Kota diambil dari bagian terakhir alamat sekolah; kosong kalau tidak ada. */
+  readonly tpl = computed(() => this.template() ?? parseLetter(this.data().school.letterTemplate));
+
+  /** Nilai isian otomatis untuk {nama}, {kelas}, dst. */
+  readonly values = computed<LetterValues>(() => {
+    const d = this.data();
+    return {
+      nama: d.student.fullName,
+      nis: d.student.studentNumber,
+      nisn: d.student.nisn ?? '-',
+      kelas_asal: d.student.currentClassLabel ?? '-',
+      kelas: d.classLabel,
+      tahun_ajaran: d.targetAcademicYear,
+      jurusan1: d.major1 ?? '-',
+      jurusan2: d.major2 ?? '-',
+      sekolah: d.school.name,
+      kepala_sekolah: d.school.principalName ?? '',
+    };
+  });
+
+  readonly text = computed<Rendered>(() => {
+    const t = this.tpl();
+    const v = this.values();
+    return {
+      title: renderLetterText(t.title, v),
+      subtitle: renderLetterText(t.subtitle, v),
+      opening: renderLetterText(t.opening, v),
+      body: renderLetterText(t.body, v),
+      closing: renderLetterText(t.closing, v),
+      signParent: renderLetterText(t.signParent, v),
+      signStudent: renderLetterText(t.signStudent, v),
+      signPrincipal: renderLetterText(t.signPrincipal, v),
+    };
+  });
+
+  /** Kota dari template, atau dari bagian terakhir alamat sekolah; titik-titik kalau tidak ada. */
   readonly city = computed(() => {
+    const fromTemplate = this.tpl().city.trim();
+    if (fromTemplate) return fromTemplate;
     const addr = this.data().school.address ?? '';
     const last = addr.split(',').map((p) => p.trim()).filter(Boolean).pop() ?? '';
     return last.replace(/\d+/g, '').trim() || '..................';
+  });
+
+  /** Baris kosong di atas label "Murid" supaya sejajar dengan label orang tua/wali yang lebih panjang. */
+  readonly studentPad = computed(() => {
+    if (!this.tpl().showParent) return [];
+    const t = this.text();
+    return Array.from({ length: Math.max(0, t.signParent.length - t.signStudent.length) });
   });
 }

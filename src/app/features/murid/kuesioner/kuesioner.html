@@ -3,52 +3,49 @@
   <section class="hero-card">
     <a class="back" routerLink="/murid">
       <app-icon name="arrow-left" [size]="18" />
-      Kembali
+      {{ t().back }}
     </a>
-    <span class="tag">Kuesioner penjurusan</span>
-    <h1>Cita-cita &amp; pilihan jurusan</h1>
-    <p>Isi sesuai minatmu sendiri. Draf tersimpan otomatis setiap pindah langkah dan bisa dilanjutkan kapan saja.</p>
-    @if (data()?.closeAtLabel; as closeAt) {
+    <span class="tag">{{ t().tag }}</span>
+    <h1>{{ t().title }}</h1>
+    <p>{{ t().intro }}</p>
+    @if (dateTime(data()?.closeAt); as closeAt) {
       <p class="deadline">
         <app-icon name="clock" [size]="16" />
-        Kuesioner ditutup {{ closeAt }}
+        {{ t().closesAt.replace('{date}', closeAt) }}
       </p>
     }
   </section>
 
   @if (loading()) {
-    <section class="card state-card">Memuat kuesioner...</section>
+    <section class="card state-card">{{ t().loading }}</section>
   } @else if (loadError(); as error) {
     <section class="card state-card">
       <p class="error-text">{{ error }}</p>
-      <button type="button" class="btn btn-secondary" (click)="reload()">Coba lagi</button>
+      <button type="button" class="btn btn-secondary" (click)="reload()">{{ t().retry }}</button>
     </section>
   } @else {
     @if (submitted()) {
       <section class="submitted">
         <app-icon name="badge-check" [size]="24" />
         <div>
-          <strong>Kuesioner sudah dikirim</strong>
-          <p>
-            Dikirim {{ data()?.submittedAtLabel }}. Jawaban tidak bisa diubah lagi. Hubungi waka kurikulum kalau ada
-            yang perlu diperbaiki.
-          </p>
+          <strong>{{ t().submittedTitle }}</strong>
+          <p>{{ t().submittedText.replace('{date}', dateTime(data()?.submittedAt) ?? '-') }}</p>
         </div>
       </section>
     } @else if (readOnly()) {
       <section class="submitted closed">
         <app-icon name="lock" [size]="24" />
         <div>
-          <strong>Periode kuesioner sedang ditutup</strong>
-          <p>Jawabanmu tidak bisa diubah sekarang. Hubungi waka kurikulum kalau kamu belum sempat mengirim.</p>
+          <strong>{{ t().closedTitle }}</strong>
+          <p>{{ t().closedText }}</p>
         </div>
       </section>
     }
 
     <!-- ============ STEPPER ============ -->
-    <nav class="stepper" aria-label="Langkah kuesioner">
+    <nav class="stepper" [attr.aria-label]="t().stepsAria">
       <ol>
-        @for (s of steps; track s.n) {
+        @for (s of steps(); track s.n) {
           <li [class.active]="step() === s.n" [class.done]="isDone(s.n)">
             <button
               type="button"
@@ -85,15 +82,15 @@
           <!-- 1. DATA DIRI -->
           <div class="grid">
             <label class="field">
-              <span>Nama lengkap</span>
+              <span>{{ t().fullName }}</span>
               <input [value]="data()?.student?.fullName ?? ''" readonly />
             </label>
             <label class="field">
-              <span>NIS</span>
+              <span>{{ t().nis }}</span>
               <input [value]="data()?.student?.studentNumber ?? ''" readonly />
             </label>
             <label class="field">
-              <span>Kelas saat ini</span>
+              <span>{{ t().currentClass }}</span>
               <input [value]="data()?.student?.classLabel ?? '-'" readonly />
             </label>
           </div>
@@ -101,8 +98,8 @@
           <div class="note">
             <app-icon name="badge-check" [size]="26" />
             <div>
-              <strong>Data tersinkron dengan e-Rapor</strong>
-              <p>Nama dan kelas mengikuti data sekolah. Kalau ada yang salah, hubungi wali kelas atau waka kurikulum.</p>
+              <strong>{{ t().syncTitle }}</strong>
+              <p>{{ t().syncText }}</p>
             </div>
           </div>
         }
@@ -112,35 +109,35 @@
           <form [formGroup]="aspirationForm" (ngSubmit)="next()" novalidate>
             <div class="grid">
               <label class="field full">
-                <span>Cita-cita</span>
+                <span>{{ t().aspiration }}</span>
                 <input
                   formControlName="aspiration"
-                  placeholder="Contoh: Dokter anak, insinyur sipil, akuntan publik"
+                  [placeholder]="t().aspirationPh"
                   maxlength="100"
                   [attr.aria-invalid]="isInvalid(aspirationForm.controls.aspiration)"
                 />
                 @if (isInvalid(aspirationForm.controls.aspiration)) {
-                  <small class="field-error">Cita-cita wajib diisi</small>
+                  <small class="field-error">{{ t().aspirationRequired }}</small>
                 }
               </label>
 
               <label class="field full">
-                <span>Penunjang cita-cita <em>(opsional)</em></span>
+                <span>{{ t().supporting }} <em>{{ t().optional }}</em></span>
                 <textarea
                   formControlName="supportingActivities"
                   rows="5"
                   maxlength="1000"
-                  placeholder="Kegiatan, prestasi, atau pengalaman yang mendukung cita-citamu. Contoh: juara olimpiade biologi tingkat kota, anggota PMR."
+                  [placeholder]="t().supportingPh"
                 ></textarea>
-                <small class="hint">{{ supportingLength() }}/1000 karakter</small>
+                <small class="hint">{{ t().chars.replace('{n}', '' + supportingLength()) }}</small>
               </label>
 
-              @for (q of interestQuestions; track q.key) {
+              @for (q of interestQuestions(); track q.key) {
                 <fieldset class="field full scale" [attr.aria-invalid]="isInvalid(aspirationForm.get(q.key)!)">
                   <legend>{{ q.title }}</legend>
                   <small class="hint">{{ q.hint }}</small>
                   <div class="scale-options">
-                    @for (o of interestScale; track o.value) {
+                    @for (o of interestScale(); track o.value) {
                       <label class="scale-option">
                         <input type="radio" [formControlName]="q.key" [value]="o.value" />
                         <span class="scale-num">{{ o.value }}</span>
@@ -149,7 +146,7 @@
                     }
                   </div>
                   @if (isInvalid(aspirationForm.get(q.key)!)) {
-                    <small class="field-error">Pilih salah satu</small>
+                    <small class="field-error">{{ t().pickOne }}</small>
                   }
                 </fieldset>
               }
@@ -162,45 +159,45 @@
           <form [formGroup]="majorForm" (ngSubmit)="next()" novalidate>
             <div class="grid">
               <label class="field">
-                <span>Pilihan jurusan 1</span>
+                <span>{{ t().major1 }}</span>
                 <select formControlName="major1Id" [attr.aria-invalid]="isInvalid(majorForm.controls.major1Id)">
-                  <option [ngValue]="null" disabled>Pilih jurusan</option>
+                  <option [ngValue]="null" disabled>{{ t().pickMajor }}</option>
                   @for (m of majors(); track m.id) {
                     <option [ngValue]="m.id">{{ m.name }}</option>
                   }
                 </select>
                 @if (isInvalid(majorForm.controls.major1Id)) {
-                  <small class="field-error">Pilihan jurusan 1 wajib diisi</small>
+                  <small class="field-error">{{ t().major1Required }}</small>
                 }
                 @if (major1(); as m) {
                   <div class="subjects">
-                    <small>Mapel yang dibutuhkan:</small>
+                    <small>{{ t().requiredSubjects }}</small>
                     @for (s of m.requiredSubjects; track s) {
-                      <span class="chip">{{ s }}</span>
+                      <span class="chip" [class.core]="m.coreSubjects?.includes(s)">{{ s }}@if (m.coreSubjects?.includes(s)) { <small>· {{ t().core }}</small> }</span>
                     }
                   </div>
                 }
               </label>
 
               <label class="field">
-                <span>Pilihan jurusan 2</span>
+                <span>{{ t().major2 }}</span>
                 <select formControlName="major2Id" [attr.aria-invalid]="isInvalid(majorForm.controls.major2Id) || majorForm.hasError('sameMajor')">
-                  <option [ngValue]="null" disabled>Pilih jurusan</option>
+                  <option [ngValue]="null" disabled>{{ t().pickMajor }}</option>
                   @for (m of majors(); track m.id) {
                     <option [ngValue]="m.id" [disabled]="m.id === major1()?.id">{{ m.name }}</option>
                   }
                 </select>
                 @if (isInvalid(majorForm.controls.major2Id)) {
-                  <small class="field-error">Pilihan jurusan 2 wajib diisi</small>
+                  <small class="field-error">{{ t().major2Required }}</small>
                 }
                 @if (majorForm.hasError('sameMajor')) {
-                  <small class="field-error">Pilihan 2 harus berbeda dengan pilihan 1</small>
+                  <small class="field-error">{{ t().sameMajor }}</small>
                 }
                 @if (major2(); as m) {
                   <div class="subjects">
-                    <small>Mapel yang dibutuhkan:</small>
+                    <small>{{ t().requiredSubjects }}</small>
                     @for (s of m.requiredSubjects; track s) {
-                      <span class="chip">{{ s }}</span>
+                      <span class="chip" [class.core]="m.coreSubjects?.includes(s)">{{ s }}@if (m.coreSubjects?.includes(s)) { <small>· {{ t().core }}</small> }</span>
                     }
                   </div>
                 }
@@ -211,11 +208,8 @@
           <div class="note">
             <app-icon name="info" [size]="26" />
             <div>
-              <strong>Pilihan 1 diprioritaskan</strong>
-              <p>
-                Kelas disusun terutama dari mapel yang dibutuhkan pilihan 1. Pilihan 2 jadi cadangan kalau tidak ada kelas
-                yang cocok dengan pilihan 1.
-              </p>
+              <strong>{{ t().priorityTitle }}</strong>
+              <p>{{ t().priorityText }}</p>
             </div>
           </div>
         }
@@ -225,66 +219,66 @@
           <div class="review">
             <section>
               <div class="review-head">
-                <h3>Data diri</h3>
+                <h3>{{ t().personal }}</h3>
                 @if (!readOnly()) {
-                  <button type="button" class="link" (click)="goTo(1)">Ubah</button>
+                  <button type="button" class="link" (click)="goTo(1)">{{ t().edit }}</button>
                 }
               </div>
               <dl>
-                <dt>Nama lengkap</dt>
+                <dt>{{ t().fullName }}</dt>
                 <dd>{{ data()?.student?.fullName }}</dd>
-                <dt>NIS</dt>
+                <dt>{{ t().nis }}</dt>
                 <dd>{{ data()?.student?.studentNumber }}</dd>
-                <dt>Kelas saat ini</dt>
+                <dt>{{ t().currentClass }}</dt>
                 <dd>{{ data()?.student?.classLabel ?? '-' }}</dd>
               </dl>
             </section>
 
             <section>
               <div class="review-head">
-                <h3>Cita-cita</h3>
+                <h3>{{ t().aspiration }}</h3>
                 @if (!readOnly()) {
-                  <button type="button" class="link" (click)="goTo(2)">Ubah</button>
+                  <button type="button" class="link" (click)="goTo(2)">{{ t().edit }}</button>
                 }
               </div>
               <dl>
-                <dt>Cita-cita</dt>
+                <dt>{{ t().aspiration }}</dt>
                 <dd>{{ aspirationForm.controls.aspiration.value || '-' }}</dd>
-                <dt>Penunjang</dt>
+                <dt>{{ t().supportingShort }}</dt>
                 <dd class="multiline">{{ aspirationForm.controls.supportingActivities.value || '-' }}</dd>
-                <dt>Minat IPA</dt>
+                <dt>{{ t().interestIpa }}</dt>
                 <dd>{{ aspirationForm.controls.interestIpa.value ?? '-' }} · {{ interestLabel(aspirationForm.controls.interestIpa.value) }}</dd>
-                <dt>Minat IPS</dt>
+                <dt>{{ t().interestIps }}</dt>
                 <dd>{{ aspirationForm.controls.interestIps.value ?? '-' }} · {{ interestLabel(aspirationForm.controls.interestIps.value) }}</dd>
               </dl>
             </section>
 
             <section>
               <div class="review-head">
-                <h3>Pilihan jurusan</h3>
+                <h3>{{ t().majors }}</h3>
                 @if (!readOnly()) {
-                  <button type="button" class="link" (click)="goTo(3)">Ubah</button>
+                  <button type="button" class="link" (click)="goTo(3)">{{ t().edit }}</button>
                 }
               </div>
               <dl>
-                <dt>Pilihan 1</dt>
+                <dt>{{ t().choice1 }}</dt>
                 <dd>
                   {{ major1()?.name ?? '-' }}
                   @if (major1(); as m) {
                     <span class="subjects inline">
                       @for (s of m.requiredSubjects; track s) {
-                        <span class="chip">{{ s }}</span>
+                        <span class="chip" [class.core]="m.coreSubjects?.includes(s)">{{ s }}@if (m.coreSubjects?.includes(s)) { <small>· {{ t().core }}</small> }</span>
                       }
                     </span>
                   }
                 </dd>
-                <dt>Pilihan 2</dt>
+                <dt>{{ t().choice2 }}</dt>
                 <dd>
                   {{ major2()?.name ?? '-' }}
                   @if (major2(); as m) {
                     <span class="subjects inline">
                       @for (s of m.requiredSubjects; track s) {
-                        <span class="chip">{{ s }}</span>
+                        <span class="chip" [class.core]="m.coreSubjects?.includes(s)">{{ s }}@if (m.coreSubjects?.includes(s)) { <small>· {{ t().core }}</small> }</span>
                       }
                     </span>
                   }
@@ -295,10 +289,10 @@
             @if (!readOnly()) {
               <label class="confirm">
                 <input type="checkbox" [formControl]="confirmed" />
-                <span>Saya menyatakan jawaban ini benar dan diisi sendiri. Setelah dikirim, jawaban tidak bisa diubah.</span>
+                <span>{{ t().confirm }}</span>
               </label>
               @if (confirmed.touched && confirmed.invalid) {
-                <small class="field-error">Centang pernyataan ini sebelum mengirim.</small>
+                <small class="field-error">{{ t().confirmRequired }}</small>
               }
             }
           </div>
@@ -315,30 +309,30 @@
           @if (step() > 1 && !readOnly()) {
             <button type="button" class="btn btn-ghost" (click)="prev()">
               <app-icon name="arrow-left" [size]="18" />
-              Sebelumnya
+              {{ t().prev }}
             </button>
           }
         </div>
 
         <div class="actions-right">
           @if (readOnly()) {
-            <a class="btn btn-primary" routerLink="/murid">Kembali ke beranda</a>
+            <a class="btn btn-primary" routerLink="/murid">{{ t().backHome }}</a>
           } @else {
             @if (step() > 1) {
               <button type="button" class="btn btn-secondary" (click)="saveDraft()" [disabled]="saving()">
                 <app-icon name="save" [size]="18" />
-                {{ saving() ? 'Menyimpan...' : 'Simpan draf' }}
+                {{ saving() ? t().saving : t().saveDraft }}
               </button>
             }
             @if (step() < 4) {
               <button type="button" class="btn btn-primary" (click)="next()">
-                Lanjut
+                {{ t().next }}
                 <app-icon name="arrow-right" [size]="18" />
               </button>
             } @else {
               <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting()">
                 <app-icon name="send" [size]="18" />
-                {{ submitting() ? 'Mengirim...' : 'Kirim kuesioner' }}
+                {{ submitting() ? t().sending : t().submit }}
               </button>
             }
           }

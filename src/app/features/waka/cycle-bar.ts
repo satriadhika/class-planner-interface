@@ -1,8 +1,14 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, computed, inject, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { CYCLE_STATUS_LABEL } from '../../shared/labels/labels';
+import { Dictionary, I18n } from '../../core/i18n/i18n';
+import { CYCLE_STATUS_TEXT } from '../../shared/labels/labels';
 import { CycleStore } from './cycle-store';
+
+const TEXT: Dictionary<{ empty: string; create: string; cycle: string; cohort: string }> = {
+  id: { empty: 'Belum ada siklus penjurusan.', create: 'Buat siklus', cycle: 'Siklus', cohort: 'angkatan' },
+  en: { empty: 'There is no selection cycle yet.', create: 'Create cycle', cycle: 'Cycle', cohort: 'class of' },
+};
 
 /** Pemilih siklus + status, ditaruh di atas setiap halaman waka. */
 @Component({
@@ -11,22 +17,22 @@ import { CycleStore } from './cycle-store';
   template: `
     @if (store.cycles().length === 0) {
       <div class="cp-alert">
-        <span>Belum ada siklus penjurusan.</span>
-        <a class="cp-btn cp-btn--primary cp-btn--sm" routerLink="/waka/siklus">Buat siklus</a>
+        <span>{{ t().empty }}</span>
+        <a class="cp-btn cp-btn--primary cp-btn--sm" routerLink="/waka/siklus">{{ t().create }}</a>
       </div>
     } @else {
       <div class="bar">
         <label class="pick">
-          <span class="cp-small cp-muted">Siklus</span>
+          <span class="cp-small cp-muted">{{ t().cycle }}</span>
           <select (change)="pick($any($event.target).value)">
             @for (c of store.cycles(); track c.id) {
-              <option [value]="c.id" [selected]="c.id === store.selectedId()">{{ c.name }} · angkatan {{ c.cohortEntryYear }}</option>
+              <option [value]="c.id" [selected]="c.id === store.selectedId()">{{ c.name }} · {{ t().cohort }} {{ c.cohortEntryYear }}</option>
             }
           </select>
         </label>
         @if (store.detail(); as d) {
           <span class="cp-badge" [class.cp-badge--ok]="d.cycle.status === 'FINALIZED'" [class.cp-badge--primary]="d.cycle.status !== 'FINALIZED'">
-            {{ statusLabel[d.cycle.status] }}
+            {{ statusLabel()[d.cycle.status] }}
           </span>
         }
       </div>
@@ -60,7 +66,9 @@ import { CycleStore } from './cycle-store';
 })
 export class CycleBar {
   readonly store = inject(CycleStore);
-  readonly statusLabel = CYCLE_STATUS_LABEL;
+  private readonly i18n = inject(I18n);
+  readonly t = computed(() => TEXT[this.i18n.lang()]);
+  readonly statusLabel = computed(() => CYCLE_STATUS_TEXT[this.i18n.lang()]);
   readonly changed = output<number>();
 
   pick(value: string): void {

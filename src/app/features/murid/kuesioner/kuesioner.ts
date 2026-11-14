@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, startWith } from 'rxjs';
 
 import { problemMessage } from '../../../core/api/problem';
+import { I18n } from '../../../core/i18n/i18n';
 import { Icon, IconName } from '../../../shared/icon/icon';
 import { MuridProgressService } from '../murid-progress.service';
 import {
@@ -20,6 +21,7 @@ import {
   KuesionerStatus,
   MajorOption,
 } from './kuesioner.service';
+import { KUESIONER_TEXT } from './kuesioner.i18n';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -50,12 +52,14 @@ export class Kuesioner {
   private readonly destroyRef = inject(DestroyRef);
   private readonly progress = inject(MuridProgressService);
 
-  readonly steps: StepInfo[] = [
-    { n: 1, label: 'Data diri', title: 'Data diri', subtitle: 'Diambil dari data sekolah (e-Rapor).', icon: 'user' },
-    { n: 2, label: 'Cita-cita & minat', title: 'Cita-cita & minat', subtitle: 'Ceritakan cita-cita, kegiatan pendukung, dan minatmu.', icon: 'target' },
-    { n: 3, label: 'Pilihan jurusan', title: 'Pilihan jurusan kuliah', subtitle: 'Pilih dua jurusan kuliah yang kamu minati.', icon: 'graduation' },
-    { n: 4, label: 'Tinjau', title: 'Tinjau jawaban', subtitle: 'Periksa kembali sebelum dikirim.', icon: 'eye' },
-  ];
+  private readonly i18n = inject(I18n);
+  /** Teks sesuai bahasa aktif. */
+  readonly t = computed(() => KUESIONER_TEXT[this.i18n.lang()]);
+
+  private readonly stepIcons: IconName[] = ['user', 'target', 'graduation', 'eye'];
+  readonly steps = computed<StepInfo[]>(() =>
+    this.t().steps.map((s, i) => ({ ...s, n: (i + 1) as Step, icon: this.stepIcons[i] })),
+  );
 
   // ----- state -----
   readonly step = signal<Step>(1);
@@ -72,7 +76,7 @@ export class Kuesioner {
   /** Terkunci kalau sudah dikirim, atau periode kuesioner sudah ditutup (ditentukan backend). */
   readonly readOnly = computed(() => !(this.data()?.editable ?? false));
   readonly submitted = computed(() => this.status() === 'SUBMITTED');
-  readonly currentStep = computed(() => this.steps[this.step() - 1]);
+  readonly currentStep = computed(() => this.steps()[this.step() - 1]);
 
   // ----- form -----
   readonly aspirationForm = this.fb.group({
@@ -123,7 +127,7 @@ export class Kuesioner {
           this.loading.set(false);
         },
         error: (err: unknown) => {
-          this.loadError.set(problemMessage(err, 'Kuesioner gagal dimuat.'));
+          this.loadError.set(problemMessage(err, this.t().loadFailed));
           this.loading.set(false);
         },
       });
@@ -227,12 +231,12 @@ export class Kuesioner {
         this.saving.set(false);
         this.status.set(view.status);
         if (!silent) {
-          this.message.set({ type: 'success', text: 'Draf tersimpan. Kamu bisa melanjutkan kapan saja.' });
+          this.message.set({ type: 'success', text: this.t().draftSaved });
         }
       },
       error: (err: unknown) => {
         this.saving.set(false);
-        this.message.set({ type: 'error', text: problemMessage(err, 'Draf gagal disimpan.') });
+        this.message.set({ type: 'error', text: problemMessage(err, this.t().draftFailed) });
       },
     });
   }
@@ -251,11 +255,11 @@ export class Kuesioner {
         this.applyData(view);
         // tahap KUESIONER sudah DONE di backend → muat ulang status sidebar & beranda
         this.progress.load().subscribe();
-        this.message.set({ type: 'success', text: 'Kuesioner terkirim. Terima kasih!' });
+        this.message.set({ type: 'success', text: this.t().submitted });
       },
       error: (err: unknown) => {
         this.submitting.set(false);
-        this.message.set({ type: 'error', text: problemMessage(err, 'Kuesioner gagal dikirim.') });
+        this.message.set({ type: 'error', text: problemMessage(err, this.t().submitFailed) });
       },
     });
   }
@@ -273,22 +277,20 @@ export class Kuesioner {
     };
   }
 
-  readonly interestQuestions = [
-    { key: 'interestIpa', title: 'Seberapa minat kamu dengan pelajaran IPA?', hint: 'Biologi, Fisika, Kimia, Matematika, Informatika' },
-    { key: 'interestIps', title: 'Seberapa minat kamu dengan pelajaran IPS?', hint: 'Sosiologi, Ekonomi, Geografi, Sejarah' },
-  ] as const;
+  readonly interestQuestions = computed(() =>
+    (['interestIpa', 'interestIps'] as const).map((key) => ({ key, ...this.t().interest[key] })),
+  );
 
   /** Pilihan skala minat 1–5 */
-  readonly interestScale = [
-    { value: 1, label: 'Sangat tidak minat' },
-    { value: 2, label: 'Kurang minat' },
-    { value: 3, label: 'Biasa saja' },
-    { value: 4, label: 'Minat' },
-    { value: 5, label: 'Sangat minat' },
-  ];
+  readonly interestScale = computed(() => this.t().scale.map((label, i) => ({ value: i + 1, label })));
 
   interestLabel(value: number | null): string {
-    return this.interestScale.find((o) => o.value === value)?.label ?? '-';
+    return this.interestScale().find((o) => o.value === value)?.label ?? '-';
+  }
+
+  /** Tanggal + jam sesuai bahasa. */
+  dateTime(iso: string | null | undefined): string | null {
+    return this.i18n.dateTime(iso);
   }
 
   // -----------------------------------------------------------------
